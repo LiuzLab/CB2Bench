@@ -106,3 +106,15 @@ load.sim <- function(depth, facs, noise, effect) {
   read.csv(url)
 }
 
+#' Load a tiny simulation file
+#'
+#' @return a data frame of a simulated data with $200$ sgRNAs
+#' @export
+#'
+#' @examples
+#' dat <- load.sample()
+#' head(dat)
+load.sample <- function() {
+  raw.url <- "https://raw.githubusercontent.com/hyunhwaj/Crispulator.jl/master/simulation/matrix/scenario_1000_0.10_1.00_0.20.csv"
+  read.csv(raw.url)[1:200,]
+}

@@ -73,6 +73,8 @@ run.simulation <- function(depth = 10,
 
   ret$plot.gene <- ggplot(tidy.gene.summary, aes(m=-pvalue, d=label, color= methods)) +
     geom_roc(labels=FALSE)
+
+  ret$tidy.gene <- tidy.gene.summary
   ret
 }
 
