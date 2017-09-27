@@ -50,9 +50,9 @@ run.mageck <- function(dat) {
 run.mbttest <- function(dat) {
   nx <- (ncol(dat)-4)
   df.ret <- mbetattest(X=dat, nci=4, na=nx/2, nb=nx/2, alpha=0.05)
-  df.gene <- df.ret %>% group_by(Gene) %>%
-    summarise(tmp=mean(gpvalue)) %>%
-    select(gene=Gene, pvalue=tmp) %>% as.data.frame
+  df.gene <- df.ret %>% dplyr::group_by(Gene) %>%
+    dplyr::summarise(tmp=mean(gpvalue)) %>%
+    dplyr::select(gene=Gene, pvalue=tmp) %>% as.data.frame
   df.sgRNA <- select(df.ret, sgRNA=sgRNA, pvalue=p_value) %>%
     as.data.frame
   list("gene"=df.gene, "sgRNA"=df.sgRNA)
@@ -120,9 +120,10 @@ run.sgRSEA <- function(dat) {
   pos <- data.frame(gene=row.names(results$gene.pos),  pvalue=results$gene.pos[,3])
   neg <- data.frame(gene=row.names(results$gene.neg),  pvalue=results$gene.neg[,3])
 
-  list("gene"=left_join(pos, neg, by="gene") %>%
-         mutate(pvalue=pmin(1,pmin(pvalue.x, pvalue.y)*2)) %>%
-         select(gene=gene, pvalue=pvalue))
+  ret <- list("gene"=as.data.frame(dplyr::left_join(pos, neg, by="gene") %>%
+         dplyr::mutate(pvalue=pmin(1,pmin(pvalue.x, pvalue.y)*2)) %>%
+         dplyr::select(gene=gene, pvalue=pvalue)))
+  ret
 }
 
 #' Load a simulation file from \href{https://github.com/hyunhwaj/Crispulator.jl}{hyunhwaj/Crispulator.jl}

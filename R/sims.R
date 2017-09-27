@@ -8,26 +8,28 @@ run.simulation <- function(depth = 10,
   )
   methods <- list(
     mageck = run.mageck,
-    CC2 = run.mbttest,
     DESeq2 = run.DESeq2,
     edgeR = run.edgeR,
     sgRSEA = run.sgRSEA,
-    screenBEAM = run.ScreenBEAM
+    screenBEAM = run.ScreenBEAM,
+    CC2 = run.mbttest
   )
   sim.dat <- load.sim(depth, facs, noise, effect)
   results.sgRNA <- NULL
   results.gene <- NULL
   for (i in names(methods)) {
-    cat("Running", i, "...")
+    cat("Running", i, "...", "\n")
     df.ret <- methods[[i]](sim.dat)
-    #df.ret$sgRNA$pvalue <- p.adjust(df.ret$sgRNA$pvalue, method="fdr")
-    if (is.null(results.sgRNA)) {
-      results.sgRNA <- df.ret$sgRNA
-    } else {
-      results.sgRNA <- left_join(results.sgRNA, df.ret$sgRNA, by = "sgRNA")
+        #df.ret$sgRNA$pvalue <- p.adjust(df.ret$sgRNA$pvalue, method="fdr")
+    if(!is.null(df.ret$sgRNA)) {
+      if (is.null(results.sgRNA)) {
+        results.sgRNA <- df.ret$sgRNA
+      } else {
+        results.sgRNA <- dplyr::left_join(results.sgRNA, df.ret$sgRNA, by = "sgRNA")
+      }
+      nc <- ncol(results.sgRNA)
+      colnames(results.sgRNA)[nc] <- i
     }
-    nc <- ncol(results.sgRNA)
-    colnames(results.sgRNA)[nc] <- i
 
     if (!is.null(df.ret$gene)) {
       if (is.null(results.gene)) {
@@ -35,7 +37,7 @@ run.simulation <- function(depth = 10,
         results.gene <- df.ret$gene
       }
       else {
-        results.gene <- left_join(results.gene, df.ret$gene, by = "gene")
+        results.gene <- dplyr::left_join(results.gene, df.ret$gene, by = "gene")
       }
       nc <- ncol(results.gene)
       colnames(results.gene)[nc] <- i
@@ -45,7 +47,7 @@ run.simulation <- function(depth = 10,
   ret <- list()
   ret$df <- (
     df.sgRNA.summary <- results.sgRNA %>%
-      left_join(select(sim.dat, sgRNA, class), by = "sgRNA") %>%
+      dplyr::left_join(select(sim.dat, sgRNA, class), by = "sgRNA") %>%
       mutate(label = ifelse(
         class %in% c("increasing", "decreasing"), 1, 0
       )) %>%
