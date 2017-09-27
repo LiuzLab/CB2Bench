@@ -86,6 +86,45 @@ run.edgeR <- function(dat) {
   list("sgRNA"=data.frame(sgRNA=dat$sgRNA, pvalue=res4$table$PValue))
 }
 
+run.ScreenBEAM <- function(dat) {
+  nx <- ncol(dat)-4
+  control.samples <- colnames(dat)[5:(5+nx/2-1)]
+  case.samples <- colnames(dat)[(5+nx/2):(5+nx-1)]
+  tmp.name <- tempfile()
+  write.table(dat, file=tmp.name, sep="\t")
+  df.ret <- ScreenBEAM(
+    ###input format
+    input.file = tmp.name,
+    control.samples = control.samples, case.samples = case.samples,
+    control.groupname = 'LOW', case.groupname = 'HIGH',
+    data.type = 'NGS',
+    do.normalization = TRUE,
+    filterLowCount = FALSE,
+    filterBy = 'control',
+    gene.columnId = 2,
+    nitt = 15000,
+    burnin = 5000
+  )
+  df.gene <- data.frame(gene=df.ret$gene, pvalue=df.ret[,6])
+  list("gene"=df.gene)
+}
+
+run.sgRSEA <- function(dat) {
+  nx <- ncol(dat)-4
+  control.samples <- colnames(dat)[5:(5+nx/2-1)]
+  case.samples <- colnames(dat)[(5+nx/2):(5+nx-1)]
+
+  dat <- UQnormalize(dat, trt=case.samples, ctrl=control.samples)
+  results <- sgRSEA(dat=dat, multiplier=30)
+
+  pos <- data.frame(gene=row.names(results$gene.pos),  pvalue=results$gene.pos[,3])
+  neg <- data.frame(gene=row.names(results$gene.neg),  pvalue=results$gene.neg[,3])
+
+  list("gene"=left_join(pos, neg, by="gene") %>%
+         mutate(pvalue=pmin(1,pmin(pvalue.x, pvalue.y)*2)) %>%
+         select(gene=gene, pvalue=pvalue))
+}
+
 #' Load a simulation file from \href{https://github.com/hyunhwaj/Crispulator.jl}{hyunhwaj/Crispulator.jl}
 #'
 #' @param depth sequencing depth

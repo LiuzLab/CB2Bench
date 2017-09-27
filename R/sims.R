@@ -10,12 +10,15 @@ run.simulation <- function(depth = 10,
     mageck = run.mageck,
     CC2 = run.mbttest,
     DESeq2 = run.DESeq2,
-    edgeR = run.edgeR
+    edgeR = run.edgeR,
+    sgRSEA = run.sgRSEA,
+    screenBEAM = run.ScreenBEAM
   )
   sim.dat <- load.sim(depth, facs, noise, effect)
   results.sgRNA <- NULL
   results.gene <- NULL
   for (i in names(methods)) {
+    cat("Running", i, "...")
     df.ret <- methods[[i]](sim.dat)
     #df.ret$sgRNA$pvalue <- p.adjust(df.ret$sgRNA$pvalue, method="fdr")
     if (is.null(results.sgRNA)) {
