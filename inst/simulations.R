@@ -2,52 +2,107 @@ library(CC2Sim)
 library(tidyverse)
 library(cowplot)
 library(plotROC)
-results <- expand.grid(noise = seq(4, 6, 0.5),
-                       effect = c(0.1, 0.2)) %>%
-  rowwise() %>%
-  mutate(ret = list(run.simulation(depth=50, facs = 0.10, noise, effect)))
-# I need to check that without list is fine for above code
+df.tmp <- expand.grid(noise = seq(1, 6, 1),
+                       effect = c(0.1, 0.2))
 
-results.all <- data.frame()
+results <- tibble()
+for(i in 1:nrow(df.tmp)) {
+  noise <- df.tmp[i,]$noise
+  effect <- df.tmp[i,]$effect
+  results <- bind_rows(results,
+                       tibble(noise=noise,
+                       effect=effect,
+                       ret=list(run.simulation(depth=100, facs = 0.25, noise, effect))))
+}
+
+curve <- tibble()
+pr.sgRNA <- tibble()
 for (i in 1:nrow(results)) {
   row <- results[i, ]
   noise <- row$noise
   effect <- row$effect
-  tidy <-
-    cbind(data.frame(noise = noise, effect = effect, row$ret[[1]]$tidy))
-  results.all <- rbind(results.all, tidy)
+  print(c(noise, effect))
+  tidy <- row$ret[[1]]$tidy
+  for(m in unique(tidy$methods)) {
+    x <- tidy %>% filter(methods == m)
+    x[is.na(x$pvalue),"pvalue"] <- 1
+    fg <- 1-x$pvalue[x$label == 1]
+    bg <- 1-x$pvalue[x$label == 0]
+    pr <- pr.curve(scores.class0 = fg, scores.class1 = bg, curve = T)
+
+    y <- tibble(
+      noise=noise,
+      effect=effect,
+      method=m,
+      x=pr$curve[,1], y=pr$curve[,2], density=pr$curve[,3]
+    )
+    curve <- bind_rows(curve, y)
+    pr.sgRNA <- bind_rows(pr.sgRNA, tibble(noise=noise,
+                                         effect=effect,
+                                         method=m,
+                                         AUPRC=pr$auc.integral))
+  }
 }
+p1 <- ggplot(pr.sgRNA, aes(x=method, y=AUPRC)) +
+  geom_bar(stat = "identity", aes(fill=method)) +
+  facet_grid(effect~noise) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
 
-results.all.gene <- data.frame()
-for (i in 1:nrow(results)) {
-  row <- results[i, ]
-  noise <- row$noise
-  effect <- row$effect
-  tidy <-
-    cbind(data.frame(noise = noise, effect = effect, row$ret[[1]]$tidy.gene))
-  results.all.gene <- rbind(results.all.gene, tidy)
-}
+p1
 
-
-p <- (ggplot(results.all, aes(m = -pvalue, d = label, color = methods)) +
-        geom_roc(labels = FALSE, pointsize = 0, linealpha=0.7, pointalpha=0.5, size=0.5) +
-        facet_grid(sprintf("beta = %.2f", effect)~sprintf("noise = %.2f", noise)) +
-        ylab("TPR") + xlab("FPR") + theme(legend.position="bottom") + ylim(0,1) +
-        scale_color_brewer(palette = "Set1"))
+p <- ggplot(curve, aes(x=x, y=y)) +
+  geom_line(aes(colour=method)) +
+  facet_grid(effect~noise) +
+  ylab("Precision") + xlab("Recall")
 p
 
-p2 <- (ggplot(results.all.gene, aes(m = -pvalue, d = label, color = methods)) +
-         geom_roc(labels = FALSE, pointsize = 0, linealpha=0.7, pointalpha=0.5, size=0.5) +
-         facet_grid(sprintf("beta = %.2f", effect)~sprintf("noise = %.2f", noise)) +
-         ylab("TPR") + xlab("FPR") + theme(legend.position="bottom") + ylim(0,1) +
-         scale_color_brewer(palette = "Set1"))
+curve.gene <- tibble()
+pr.gene <- tibble()
+for (i in 1:nrow(results)) {
+  row <- results[i, ]
+  noise <- row$noise
+  effect <- row$effect
+  print(c(noise, effect))
+  tidy <- row$ret[[1]]$tidy.gene
+  for(m in unique(tidy$methods)) {
+    x <- tidy %>% filter(methods == m)
+    x[is.na(x$pvalue),"pvalue"] <- 1
+    fg <- 1-x$pvalue[x$label == 1]
+    bg <- 1-x$pvalue[x$label == 0]
+    pr <- pr.curve(scores.class0 = fg, scores.class1 = bg, curve = T)
+    y <- tibble(
+      noise=noise,
+      effect=effect,
+      method=m,
+      x=pr$curve[,1], y=pr$curve[,2], density=pr$curve[,3]
+    )
+    curve.gene <- bind_rows(curve.gene, y)
+    pr.gene <- bind_rows(pr.gene, tibble(noise=noise,
+                                          effect=effect,
+                                          method=m,
+                                          AUPRC=pr$auc.integral))
+  }
+}
+
+p22 <- ggplot(pr.gene, aes(x=method, y=AUPRC)) +
+  geom_bar(stat = "identity", aes(fill=method)) +
+  facet_grid(effect~noise) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+p2 <- ggplot(curve.gene, aes(x=x, y=y)) +
+  geom_line(aes(colour=method)) +
+  facet_grid(effect~noise) + ylab("Precision") + xlab("Recall")
 p2
 
-save_plot("inst/figures/simulation_seq_depth_50_facs_10_sgRNA.PDF", p, base_height=6, base_aspect_ratio = 2.0)
-save_plot("inst/figures/simulation_seq_depth_50_facs_10_gene.PDF", p2, base_height=6, base_aspect_ratio = 2.0)
+plots <- plot_grid(p1, p22, p, p2, ncol=2, labels=c("A","B","C", "D"))
 
-save_plot("benchmarking/simulation_ROC.pdf", p, base_height=6, base_aspect_ratio = 2.0)
-save(file="benchmarking/results.rData", results)
+save_plot("inst/simulation_depth_100.pdf", plots,
+          base_height=8, base_aspect_ratio = 3
+          )
 
 # An example code for investigation the correlation between method A and B
 # results.sgRNA %>%

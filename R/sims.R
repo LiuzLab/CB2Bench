@@ -11,7 +11,7 @@ run.simulation <- function(depth = 10,
     DESeq2 = run.DESeq2,
     edgeR = run.edgeR,
     sgRSEA = run.sgRSEA,
-    screenBEAM = run.ScreenBEAM,
+    #screenBEAM = run.ScreenBEAM,
     CC2 = run.mbttest
   )
   sim.dat <- load.sim(depth, facs, noise, effect)
