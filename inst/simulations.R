@@ -1,7 +1,7 @@
 library(CC2Sim)
 library(tidyverse)
 library(cowplot)
-library(plotROC)
+library(PRROC)
 df.tmp <- expand.grid(noise = seq(1, 6, 1),
                        effect = c(0.1, 0.2))
 
