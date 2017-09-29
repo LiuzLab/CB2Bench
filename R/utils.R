@@ -49,12 +49,10 @@ run.mageck <- function(dat) {
 #' run.mbttest(dat)
 run.mbttest <- function(dat) {
   nx <- (ncol(dat)-4)
-  df.ret <- mbetattest(X=dat, nci=4, na=nx/2, nb=nx/2, alpha=0.05)
-  df.gene <- df.ret %>% dplyr::group_by(Gene) %>%
-    dplyr::summarise(tmp=mean(gpvalue)) %>%
-    dplyr::select(gene=Gene, pvalue=tmp) %>% as.data.frame
-  df.sgRNA <- select(df.ret, sgRNA=sgRNA, pvalue=p_value) %>%
-    as.data.frame
+  df.sgRNA <- mbetattest(X=dat, nci=4, na=nx/2, nb=nx/2, alpha=0.05, level="sgRNA") %>%
+    dplyr::select(sgRNA=sgRNA, pvalue=pvalue)
+  df.gene <- mbetattest(X=dat, nci=4, na=nx/2, nb=nx/2, alpha=0.05, level="gene") %>%
+    dplyr::select(gene=genes, pvalue=gpvalue)
   list("gene"=df.gene, "sgRNA"=df.sgRNA)
 }
 
