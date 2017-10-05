@@ -77,7 +77,7 @@ plot.AUPRC <- function(tidy) {
                                AUPRC=pr$auc.integral))
   }
   
-  curve <- curve %>% arrange(desc(y))
+  #curve <- curve %>% arrange(desc(y))
   
   ret <- list()
   ret$bar.plot <- ggplot(prv, aes(x=method, y=AUPRC)) +
@@ -87,7 +87,7 @@ plot.AUPRC <- function(tidy) {
           axis.ticks.x=element_blank())
   
   ret$curve.plot <- ggplot(curve, aes(x=x, y=y)) +
-    geom_line(aes(colour=method)) +
+    geom_step(aes(colour=method)) +
     ylab("Precision") + xlab("Recall") + ylim(0,1)
   
   ret
@@ -100,8 +100,9 @@ run <- function(dat) {
     DESeq2 = run.DESeq2,
     edgeR = run.edgeR,
     sgRSEA = run.sgRSEA,
+    PBNA = run.PBNPA
     #screenBEAM = run.ScreenBEAM,
-    CC2 = run.mbttest
+    #CC2 = run.mbttest
   )
   sim.dat <- dat
   results.sgRNA <- NULL

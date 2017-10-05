@@ -128,6 +128,26 @@ run.sgRSEA <- function(dat) {
   ret
 }
 
+run.PBNPA <- function(dat) {
+  nx <- ncol(dat)-4
+
+  datlist <- list()
+  for(i in 1:3) {
+    datlist[[i]] <- data.frame(sgRNA = dat$sgRNA,
+                               Gene = dat$gene,
+                               initial.count = dat[,i+4],
+                               final.count = dat[,i+4+(nx/2)])
+  }
+  result <- PBNPA(datlist)$final.result
+
+  ret <- list("gene"= result %>%
+                dplyr::mutate(
+                  pvalue=pmin(1,pmin(pos.pvalue, neg.pvalue)*2)) %>%
+                dplyr::select(gene=Gene, pvalue=pvalue))
+  ret
+
+}
+
 #' Load a simulation file from \href{https://github.com/hyunhwaj/Crispulator.jl}{hyunhwaj/Crispulator.jl}
 #'
 #' @param depth sequencing depth
