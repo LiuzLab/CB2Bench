@@ -16,8 +16,12 @@ run.mageck <- function(dat) {
   write.table(file = tmp.fname, dat.mageck, sep="\t", quote = F, row.names = F)
   mageck.cmd <- "mageck"
 
-  treatment.id <- paste0( colnames(dat.mageck)[3:6], collapse="," )
-  control.id <- paste0( colnames(dat.mageck)[7:10], collapse="," )
+  nx <- ncol(dat)-4
+  control.samples <- colnames(dat)[5:(5+nx/2-1)]
+  case.samples <- colnames(dat)[(5+nx/2):(5+nx-1)]
+
+  treatment.id <- paste0( case.samples, collapse="," )
+  control.id <- paste0( control.samples, collapse="," )
 
   out.dir <- paste0(tempdir(),"/", "mageck")
   cmd  <- paste(mageck.cmd, "test", "-k", tmp.fname, "-t", treatment.id, "-c", control.id,
