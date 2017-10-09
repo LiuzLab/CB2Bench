@@ -63,12 +63,13 @@ plot.all <- function(ret, type="PR", title = NULL) {
   p
 }
 
-RT112.1 <- plot.all(RT112.ret, "ROC", "RTT12 dataset benchmark (AUCROC)")
-RT112.2 <- plot.all(RT112.ret, "PR", "RTT12 dataset benchmark (AUCPRC)")
 
-UMUC3.1 <- plot.all(UMUC3.ret, "ROC", "UMUC3 dataset benchmark (AUCROC)")
-UMUC3.2 <- plot.all(UMUC3.ret, "PR", "UMUC3 dataset benchmark (AUCPRC)")
-
-final <- plot_grid(RT112.1, RT112.2, UMUC3.1, UMUC3.2, ncol=2)
-final
-save_plot(filename = "CC2-NatBioTech.PDF", final, base_aspect_ratio = 1.8, base_height = 8)
+# RT112.1 <- plot.all(RT112.ret, "ROC", "RTT12 dataset benchmark (AUCROC)")
+# RT112.2 <- plot.all(RT112.ret, "PR", "RTT12 dataset benchmark (AUCPRC)")
+#
+# UMUC3.1 <- plot.all(UMUC3.ret, "ROC", "UMUC3 dataset benchmark (AUCROC)")
+# UMUC3.2 <- plot.all(UMUC3.ret, "PR", "UMUC3 dataset benchmark (AUCPRC)")
+#
+# final <- plot_grid(RT112.1, RT112.2, UMUC3.1, UMUC3.2, ncol=2)
+# final
+# save_plot(filename = "CC2-NatBioTech.PDF", final, base_aspect_ratio = 1.8, base_height = 8)

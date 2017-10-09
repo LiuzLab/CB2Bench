@@ -148,6 +148,28 @@ run.PBNPA <- function(dat) {
 
 }
 
+run.RSA <- function(dat) {
+  nx <- ncol(dat)-4
+  ctrl.median <- dat[,5:(5+nx/2-1)] %>%
+    apply(1, median, na.rm = TRUE)
+
+  test.median <- dat[,(5+nx/2):(5+nx-1)] %>%
+    apply(1, median, na.rm = TRUE)
+
+  FC <- test.median / ctrl.median
+  df.RSA <- data.frame(Gene_ID=dat$gene,
+                       Well_ID=dat$sgRNA,
+                       Score=FC)
+
+  ret.RSA <- RSA(df.RSA, LB=0, UB=1e8)
+  ret.gene <- ret.RSA %>% group_by(Gene_ID) %>%
+    summarise(score = mean(LogP)) %>%
+    select(gene = Gene_ID, pvalue = score)
+
+  ret <- list("gene"=ret.gene)
+
+}
+
 #' Load a simulation file from \href{https://github.com/hyunhwaj/Crispulator.jl}{hyunhwaj/Crispulator.jl}
 #'
 #' @param depth sequencing depth

@@ -1,64 +1,3 @@
----
-title: "Report real data analysis"
-output: github_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_chunk$set(message = FALSE)
-```
-
-## Introduction
-
-This is the R markdown report of the analysis for the CRISPR dataset of [Evers et al., Nat. Bio. Tech. 2016](http://www.nature.com/nbt/journal/v34/n6/full/nbt.3536.html)
-
-
-## Download dataset & Data Preprocessing
-```{r}
-library(CRISPRCloud2)
-library(CC2Sim)
-library(readxl)
-library(tidyverse)
-library(knitr)
-library(plotROC)
-library(cowplot)
-library(PRROC)
-system("wget http://www.nature.com/nbt/journal/v34/n6/extref/nbt.3536-S3.xlsx")
-nat <- readxl::read_excel("nbt.3536-S3.xlsx")
-```
-
-See I selected proper positions in the sheet correctly.
-
-```{r}
-RT112 <- select(nat, 2, 3, 1, 4, 5:7, 8:10)  
-RT112
-```
-
-For UMUC3, too.
-
-```{r}
-UMUC3 <- select(nat, 2, 3, 1, 4, 17:22)
-UMUC3
-```
-
-Need to set proper names for each column, and change the labels.
-
-```{r}
-dataset <- list("RT112" = RT112, "UMUC3" = UMUC3)
-for(d in names(dataset)) {
-  colnames(dataset[[d]]) <- c("X", "gene", "sgRNA", "class", "B1", "B2", "B3", "A1", "A2", "A3")
-  dataset[[d]][dataset[[d]]==0] <- "inactive"
-  dataset[[d]][dataset[[d]]==1] <- "decreasing"
-
-}
-save(dataset, file="extdata/nature-biotech.Rdata")
-dataset
-```
-
-## Running test
-
-edit functions from `CC2Sim` package for this simulations
-```{r}
 plot.AUPRC <- function(tidy) {
   curve <- tibble()
   prv <- tibble()
@@ -75,43 +14,43 @@ plot.AUPRC <- function(tidy) {
     print(y)
     curve <- bind_rows(curve, y)
     prv <- bind_rows(prv, tibble(method=m,
-                               AUPRC=pr$auc.integral))
+                                 AUPRC=pr$auc.integral))
   }
-  
+
   #curve <- curve %>% arrange(desc(y))
-  
+
   ret <- list()
   ret$bar.plot <- ggplot(prv, aes(x=method, y=AUPRC)) +
     geom_bar(stat = "identity", aes(fill=method)) +
     theme(axis.title.x=element_blank(),
           axis.text.x=element_blank(),
           axis.ticks.x=element_blank())
-  
+
   ret$curve.plot <- ggplot(curve, aes(x=x, y=y)) +
     geom_step(aes(colour=method)) +
     ylab("Precision") + xlab("Recall") + ylim(0,1)
-  
+
   ret
 }
 
 
-run <- function(dat) {
-  methods <- list(
+run <- function(dat, methods = list(
     mageck = run.mageck,
     DESeq2 = run.DESeq2,
     edgeR = run.edgeR,
     sgRSEA = run.sgRSEA,
-    PBNA = run.PBNPA
+    PBNA = run.PBNPA,
     #screenBEAM = run.ScreenBEAM,
-    #CC2 = run.mbttest
-  )
+    CC2 = run.mbttest
+  )) {
+
   sim.dat <- dat
   results.sgRNA <- NULL
   results.gene <- NULL
   for (i in names(methods)) {
     cat("Running", i, "...", "\n")
     df.ret <- methods[[i]](sim.dat)
-        #df.ret$sgRNA$pvalue <- p.adjust(df.ret$sgRNA$pvalue, method="fdr")
+    #df.ret$sgRNA$pvalue <- p.adjust(df.ret$sgRNA$pvalue, method="fdr")
     if(!is.null(df.ret$sgRNA)) {
       if (is.null(results.sgRNA)) {
         results.sgRNA <- df.ret$sgRNA
@@ -146,7 +85,7 @@ run <- function(dat) {
   )
 
   ret$tidy.sgRNA <- (tidy.sgRNA.summary <- df.sgRNA.summary %>%
-                 gather(methods, pvalue,-sgRNA,-label))
+                       gather(methods, pvalue,-sgRNA,-label))
 
   ret$plot.roc.sgRNA <-
     ggplot(tidy.sgRNA.summary, aes(
@@ -177,22 +116,3 @@ run <- function(dat) {
   ret$plot.prc.gene <- AUPRC.gene$curve.plot
   ret
 }
-```
-
-Run RT112 dataset
-
-```{r cache=T}
-RT112.ret <- run(dataset$RT112)
-```
-```{r}
-plot_grid(RT112.ret$plot.roc.sgRNA, RT112.ret$plot.roc.gene, RT112.ret$plot.prc.sgRNA, RT112.ret$plot.prc.gene)
-```
-
-Run UMUC3 dataset
-
-```{r cache=T}
-UMUC3.ret <- run(dataset$UMUC3)
-```
-```{r}
-plot_grid(UMUC3.ret$plot.roc.sgRNA, UMUC3.ret$plot.roc.gene, UMUC3.ret$plot.prc.sgRNA, UMUC3.ret$plot.prc.gene)
-```
