@@ -1,15 +1,15 @@
-library(CC2Sim)
+#library(CC2Sim)
 
-load(system.file("extdata", "nature-biotech.Rdata", package = "CC2Sim"))
+#load(system.file("extdata", "nature-biotech.Rdata", package = "CC2Sim"))
 RT112 <- dataset$RT112
 
 methods <- list(
   mageck = run.mageck,
+  screenBEAM = run.ScreenBEAM,
   DESeq2 = run.DESeq2,
   edgeR = run.edgeR,
   sgRSEA = run.sgRSEA,
-  PBNA = run.PBNPA,
-  #screenBEAM = run.ScreenBEAM,
+  PBNPA = run.PBNPA,
   CC2 = run.mbttest,
   RSA = run.RSA
 )

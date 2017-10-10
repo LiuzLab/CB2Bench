@@ -3,9 +3,9 @@ plot.AUPRC <- function(tidy) {
   prv <- tibble()
   for(m in unique(tidy$methods)) {
     x <- tidy %>% filter(methods == m)
-    x[is.na(x$pvalue),"pvalue"] <- 1
-    fg <- 1-x$pvalue[x$label == 1]
-    bg <- 1-x$pvalue[x$label == 0]
+    x[is.na(x$score),"pvalue"] <- 1
+    fg <- x$score[x$label == 1]
+    bg <- x$score[x$label == 0]
     pr <- pr.curve(scores.class0 = fg, scores.class1 = bg, curve = T)
     y <- tibble(
       method=m,
@@ -50,7 +50,6 @@ run <- function(dat, methods = list(
   for (i in names(methods)) {
     cat("Running", i, "...", "\n")
     df.ret <- methods[[i]](sim.dat)
-    #df.ret$sgRNA$pvalue <- p.adjust(df.ret$sgRNA$pvalue, method="fdr")
     if(!is.null(df.ret$sgRNA)) {
       if (is.null(results.sgRNA)) {
         results.sgRNA <- df.ret$sgRNA
@@ -63,7 +62,6 @@ run <- function(dat, methods = list(
 
     if (!is.null(df.ret$gene)) {
       if (is.null(results.gene)) {
-        #df.ret$gene$pvalue <- p.adjust(df.ret$gene$pvalue, method="fdr")
         results.gene <- df.ret$gene
       }
       else {
@@ -85,11 +83,11 @@ run <- function(dat, methods = list(
   )
 
   ret$tidy.sgRNA <- (tidy.sgRNA.summary <- df.sgRNA.summary %>%
-                       gather(methods, pvalue,-sgRNA,-label))
+                       gather(methods, score,-sgRNA,-label))
 
   ret$plot.roc.sgRNA <-
     ggplot(tidy.sgRNA.summary, aes(
-      m = -pvalue,
+      m = score,
       d = label,
       color = methods
     )) +
@@ -104,10 +102,10 @@ run <- function(dat, methods = list(
     select(-class)
 
   tidy.gene.summary <- df.gene.summary %>%
-    gather(methods, pvalue, -gene, -label)
+    gather(methods, score, -gene, -label)
   ret$tidy.gene <- tidy.gene.summary
 
-  ret$plot.roc.gene <- ggplot(tidy.gene.summary, aes(m=-pvalue, d=label, color= methods)) +
+  ret$plot.roc.gene <- ggplot(tidy.gene.summary, aes(m=score, d=label, color= methods)) +
     geom_roc(labels=FALSE)
 
   AUPRC.sgRNA <- plot.AUPRC(ret$tidy.sgRNA)

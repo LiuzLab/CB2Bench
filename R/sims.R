@@ -20,7 +20,6 @@ run.simulation <- function(depth = 10,
   for (i in names(methods)) {
     cat("Running", i, "...", "\n")
     df.ret <- methods[[i]](sim.dat)
-        #df.ret$sgRNA$pvalue <- p.adjust(df.ret$sgRNA$pvalue, method="fdr")
     if(!is.null(df.ret$sgRNA)) {
       if (is.null(results.sgRNA)) {
         results.sgRNA <- df.ret$sgRNA
@@ -33,7 +32,6 @@ run.simulation <- function(depth = 10,
 
     if (!is.null(df.ret$gene)) {
       if (is.null(results.gene)) {
-        #df.ret$gene$pvalue <- p.adjust(df.ret$gene$pvalue, method="fdr")
         results.gene <- df.ret$gene
       }
       else {
@@ -55,11 +53,11 @@ run.simulation <- function(depth = 10,
   )
 
   ret$tidy <- (tidy.sgRNA.summary <- df.sgRNA.summary %>%
-                 gather(methods, pvalue,-sgRNA,-label))
+                 gather(methods, score,-sgRNA,-label))
 
   ret$plot <-
     ggplot(tidy.sgRNA.summary, aes(
-      m = -pvalue,
+      m = score,
       d = label,
       color = methods
     )) +
@@ -74,9 +72,9 @@ run.simulation <- function(depth = 10,
     select(-class)
 
   tidy.gene.summary <- df.gene.summary %>%
-    gather(methods, pvalue, -gene, -label)
+    gather(methods, score, -gene, -label)
 
-  ret$plot.gene <- ggplot(tidy.gene.summary, aes(m=-pvalue, d=label, color= methods)) +
+  ret$plot.gene <- ggplot(tidy.gene.summary, aes(m=score, d=label, color= methods)) +
     geom_roc(labels=FALSE)
 
   ret$tidy.gene <- tidy.gene.summary
