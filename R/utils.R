@@ -31,12 +31,14 @@ run.mageck <- function(dat) {
   df.gene <- read.table(paste0(out.dir, ".gene_summary.txt"),
                         sep="\t", row.names = NULL, head=T) %>%
     #mutate(pvalue=pmin(1,pmin(neg.p.value, pos.p.value)*2)) %>%
-    select(gene=id, score=-neg.score)
+    select(gene=id, score=neg.score)
+  df.gene$score <- -df.gene$score
 
 
   df.sgRNA <- read.table(paste0(out.dir, ".sgrna_summary.txt"),
                          sep="\t", row.names = NULL, head=T) %>%
-    select(sgRNA=sgrna, score=-p.low)
+    select(sgRNA=sgrna, score=p.low)
+  df.sgRNA$score <- -df.sgRNA$score
   list("gene"=df.gene, "sgRNA"=df.sgRNA)
 }
 
@@ -133,8 +135,9 @@ run.PBNPA <- function(dat) {
   #                pvalue=pmin(1,pmin(pos.pvalue, neg.pvalue)*2)) %>%
   #              dplyr::select(gene=Gene, pvalue=pvalue))
   ret <- list("gene"=result %>%
-                select(gene=Gene, score=-neg.pvalue))
-
+                select(gene=Gene, score=neg.pvalue))
+  ret$gene[,"score"] <- -ret$gene[,"score"]
+  ret
 }
 
 run.RSA <- function(dat) {
@@ -153,7 +156,8 @@ run.RSA <- function(dat) {
   ret.RSA <- RSA(df.RSA, LB=0, UB=1e8)
   ret.gene <- ret.RSA %>% dplyr::group_by(Gene_ID) %>%
     dplyr::summarise(score = mean(LogP)) %>%
-    dplyr::select(gene = Gene_ID, score = -score)
+    dplyr::select(gene = Gene_ID, score = score)
+  ret.gene$score <- -ret.gene$score
 
   ret <- list("gene"=ret.gene)
 
@@ -191,3 +195,5 @@ load.sample <- function() {
   raw.url <- "https://raw.githubusercontent.com/hyunhwaj/Crispulator.jl/master/simulation/matrix/scenario_1000_0.10_1.00_0.20.csv"
   read.csv(raw.url)[1:200,]
 }
+
+

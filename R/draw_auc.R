@@ -7,9 +7,9 @@ plot.performance <- function(tidy, type="PR") {
   auc <- tibble()
   for(m in unique(tidy$methods)) {
     x <- tidy %>% filter(methods == m)
-    x[is.na(x$pvalue),"pvalue"] <- 1
-    fg <- 1-x$pvalue[x$label == 1]
-    bg <- 1-x$pvalue[x$label == 0]
+    x[is.na(x$score),"score"] <- -1e8
+    fg <- x$score[x$label == 1]
+    bg <- x$score[x$label == 0]
     pr <- fun.curve(scores.class0 = fg, scores.class1 = bg, curve = T)
     y <- tibble(
       method=m,
@@ -32,7 +32,7 @@ plot.performance <- function(tidy, type="PR") {
     #geom_line(aes(colour=method)) +
     #geom_smooth(aes(colour=method),method="loess") + ylim(0,1)
     #geom_point(aes(colour=method), alpha=0.5, size=0.5) + ylim(0, 1)
-    geom_path(aes(colour=method)) + ylim(0,1)
+    geom_path(aes(colour=method), alpha=0.5, size=1) + ylim(0,1)
 
   ret
 }
@@ -70,6 +70,3 @@ plot.all <- function(ret, type="PR", title = NULL) {
 # UMUC3.1 <- plot.all(UMUC3.ret, "ROC", "UMUC3 dataset benchmark (AUCROC)")
 # UMUC3.2 <- plot.all(UMUC3.ret, "PR", "UMUC3 dataset benchmark (AUCPRC)")
 #
-# final <- plot_grid(RT112.1, RT112.2, UMUC3.1, UMUC3.2, ncol=2)
-# final
-# save_plot(filename = "CC2-NatBioTech.PDF", final, base_aspect_ratio = 1.8, base_height = 8)
