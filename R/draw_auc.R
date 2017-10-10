@@ -31,8 +31,8 @@ plot.performance <- function(tidy, type="PR") {
   ret$curve.plot <- ggplot(curve, aes(x=x, y=y)) +
     #geom_line(aes(colour=method)) +
     #geom_smooth(aes(colour=method),method="loess") + ylim(0,1)
-    #geom_point(aes(colour=method), alpha=0.5, size=0.5) + ylim(0, 1)
-    geom_path(aes(colour=method), alpha=0.5, size=1) + ylim(0,1)
+    geom_point(aes(colour=method), alpha=0.5, size=0.5) + ylim(0, 1)
+    #geom_path(aes(colour=method), alpha=0.5, size=1) + ylim(0,1)
 
   ret
 }

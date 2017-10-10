@@ -26,6 +26,7 @@ run.mageck <- function(dat) {
 
   df.sgRNA <- read.table(paste0(out.dir, ".sgrna_summary.txt"),
                          sep="\t", row.names = NULL, head=T)
+  list("sgRNA"=df.sgRNA, "gene"=df.gene)
 }
 
 run.mbttest <- function(dat) {
@@ -47,7 +48,7 @@ run.DESeq2<-function(dat){
 
   dds <- DESeqDataSetFromMatrix(countData = df.deseq2, colData = col.data, design = ~ condition)
   dds <- DESeq(dds)
-  res <- as.data.frame(results(dds))
+  res <- rownames_to_column(as.data.frame(results(dds)), "sgRNA")
   list("sgRNA"=res)
 }
 
@@ -59,7 +60,7 @@ run.edgeR <- function(dat) {
   res2<- estimateCommonDisp(res1)
   res3<- estimateTagwiseDisp(res2)
   res4<- exactTest(res3)
-  list("sgRNA"=data.frame(res4$table))
+  list("sgRNA"=cbind(data.frame(sgRNA=dat$sgRNA), data.frame(res4$table)))
 }
 
 run.ScreenBEAM <- function(dat) {
@@ -95,14 +96,16 @@ run.sgRSEA <- function(dat) {
 }
 
 run.PBNPA <- function(dat) {
-  nx <- ncol(dat)-4
+  dat$gene <- as.character(dat$gene)
+  dat$sgRNA <- as.character(dat$sgRNA)
+  nx <- (ncol(dat)-4)/2
 
   datlist <- list()
-  for(i in 1:3) {
+  for(i in 1:nx) {
     datlist[[i]] <- data.frame(sgRNA = dat$sgRNA,
                                Gene = dat$gene,
                                initial.count = dat[,i+4],
-                               final.count = dat[,i+4+(nx/2)])
+                               final.count = dat[,i+4+nx])
   }
   result <- PBNPA(datlist)$final.result %>%
     dplyr::mutate(p.value.twosides=pmin(1,pmin(pos.pvalue , neg.pvalue )*2))
@@ -174,29 +177,46 @@ plot.AUPRC <- function(tidy) {
 }
 
 
-run <- function(dat, methods, selector) {
+run <- function(dat, methods, selector, cache.dir) {
   sim.dat <- dat
   results.sgRNA <- NULL
   results.gene <- NULL
+  selector <- as.data.frame(selector)
   for (i in names(methods)) {
     cat("Running", i, "...", "\n")
     df.ret <- methods[[i]](sim.dat)
+    #i <- names(methods)[1]
+    gene_id <- selector[selector$name==i,]$gene_id
+    sgrna_id <- selector[selector$name==i,]$sgrna_id
+    tar.sgrna.column <- selector[selector$name==i, "both.sgRNA.column"]
+    tar.sgrna.func <- selector[selector$name==i, "both.sgRNA.func"]
+    tar.gene.column <- selector[selector$name==i, "both.gene.column"]
+    tar.gene.func <- selector[selector$name==i, "both.gene.func"]
 
-    if(!is.null(df.ret$sgRNA)) {
+    if(!is.na(sgrna_id)) {
+      tmp.sgRNA <- data.frame(sgRNA=df.ret$sgRNA[,sgrna_id],
+                              score=sapply(df.ret$sgRNA[,tar.sgrna.column],
+                                          get(tar.sgrna.func)))
+      if(!is.null(cache.dir)) {
+        write_csv(file=system.file(cache.dir, paste0(i, "_", "sgRNA.csv")), df.ret$sgRNA)
+      }
       if (is.null(results.sgRNA)) {
-        results.sgRNA <- df.ret$sgRNA
+        results.sgRNA <- tmp.sgRNA
       } else {
-        results.sgRNA <- dplyr::left_join(results.sgRNA, df.ret$sgRNA, by = "sgRNA")
+        results.sgRNA <- dplyr::left_join(results.sgRNA, tmp.sgRNA, by = "sgRNA")
       }
       nc <- ncol(results.sgRNA)
       colnames(results.sgRNA)[nc] <- i
     }
-    if (!is.null(df.ret$gene)) {
+    if (!is.na(gene_id)) {
+      tmp.gene <- data.frame(gene=df.ret$gene[,gene_id],
+                              score=sapply(df.ret$gene[,tar.gene.column],
+                                           get(tar.gene.func)))
       if (is.null(results.gene)) {
-        results.gene <- df.ret$gene
+        results.gene <- tmp.gene
       }
       else {
-        results.gene <- dplyr::left_join(results.gene, df.ret$gene, by = "gene")
+        results.gene <- dplyr::left_join(results.gene, tmp.gene, by = "gene")
       }
       nc <- ncol(results.gene)
       colnames(results.gene)[nc] <- i
@@ -252,14 +272,43 @@ run <- function(dat, methods, selector) {
 dat <- load.sample()
 
 methods = list(
-  mageck = run.mageck,
+  MAGeCK = run.mageck,
   DESeq2 = run.DESeq2,
   edgeR = run.edgeR,
   sgRSEA = run.sgRSEA,
-  PBNA = run.PBNPA,
+  PBNPA = run.PBNPA,
   ScreenBEAM = run.ScreenBEAM,
   CC2 = run.mbttest
 )
 
 selector <- read_delim("inst/extdata/twosided-expr.tsv", delim="\t")
+load("inst/extdata/nature-biotech.Rdata")
 
+cache.dir <- system.file("~/Users/hwan/Sandbox/CC2Sim/cache/")
+ret <- run(dataset$RT112, methods, selector, cache.dir)
+rtt.x <- plot.all(ret, "ROC", "RTT12 dataset benchmark (AUCROC)")
+rtt.y <- plot.all(ret, "PR", "RTT12 dataset benchmark (AUCPRC)")
+ret2 <- run(dataset$UMUC3, methods, selector)
+umuc.x  <- plot.all(ret2, "ROC", "UMUC3 dataset benchmark (AUCROC)")
+umuc.y  <- plot.all(ret2, "PR", "UMUC3 dataset benchmark (AUCPRC)")
+both <- plot_grid(rtt.x, umuc.x, rtt.y, umuc.y)
+
+rank.heatmap <- function(gene.ret, filename) {
+  gene.ret <- ret$gene
+  gene.rank <- gene.ret[,-c(1,ncol(gene.ret))]
+  for(i in 1:(ncol(gene.ret)-2)) {
+    gene.rank[,i] <- rank(gene.ret[,i+1])
+  }
+  row.names(gene.rank) <- gene.ret$gene
+  library(pheatmap)
+  library(RColorBrewer)
+
+  df.anno <- data.frame(label=ifelse(gene.ret$label,"essential", "non essential"))
+  row.names(df.anno) <- gene.ret$gene
+  order(rowSums(gene.rank))
+  pheatmap(t(gene.rank[order(gene.rank$CC2),]), cluster_cols = F,
+           color = colorRampPalette((brewer.pal(n = 11, name ="RdYlBu")))(100),
+           annotation_col = df.anno)
+}
+rank.heatmap(ret$gene, "RT112-gene-heatmap.pdf")
+rank.heatmap(UMUC3.ret$gene, "UMUC3-gene-heatmap.pdf")
