@@ -17,8 +17,8 @@ df.ret <- ScreenBEAM(
 		     filterLowCount = FALSE,
 		     filterBy = 'control',
 		     gene.columnId = 2,
-		     nitt = 1500,
-		     burnin = 500
+		     nitt = 15000,
+		     burnin = 5000
 		     )
 #df.gene <- data.frame(gene=df.ret$gene, score=-df.ret[,4])
 save(df.ret, file=args[2])

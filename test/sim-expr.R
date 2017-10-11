@@ -315,8 +315,8 @@ library(PBNPA)
 library(CRISPRCloud2)
 library(plotROC)
 library(PRROC)
-#selector <- read_delim("inst/extdata/negative-expr.tsv", delim="\t")
-selector <- read_delim("inst/extdata/twosided-expr.tsv", delim="\t")
+selector <- read_delim("inst/extdata/negative-expr.tsv", delim="\t")
+#selector <- read_delim("inst/extdata/twosided-expr.tsv", delim="\t")
 load("inst/extdata/nature-biotech.Rdata")
 
 grid <- NULL
@@ -384,7 +384,7 @@ df.gene.plot <- tibble()
 for(d in names(ret)) {
   if(d == "CRISPRi.RT112") next()
   df.gene <- ret[[d]]$tidy.gene
-  df.gene$score <- p.adjust(-df.gene$score, method = "fdr")
+  #df.gene$score <- p.adjust(-df.gene$score, method = "fdr")
   for(mat in unique(df.gene$methods)) {
     tmp <- df.gene %>% filter(methods==mat)
     for(fdr in seq(0.1,0.9,0.05)) {
@@ -406,12 +406,53 @@ for(d in names(ret)) {
   for(mat in unique(df.gene$methods)) {
     tmp <- df.gene %>% filter(methods==mat)
     for(fdr in seq(0.1,0.9,0.05)) {
-      precision <- sum(tmp$score < fdr & tmp$label == 1) / max(1,sum(tmp$score < fdr))
-      df.gene.plot2 <- bind_rows(df.gene.plot2, tibble(dataset=d, method=mat, FDR=fdr, PR=precision))
+      #precision <- sum(tmp$score < fdr & tmp$label == 1) / max(1,sum(tmp$score < fdr))
+      precision <- sum(tmp$score < fdr & tmp$label == 1)
+      df.gene.plot2 <- bind_rows(df.gene.plot2, tibble(dataset=d, method=mat, FDR=fdr, CNT=precision))
     }
   }
 }
 
-ggplot(df.gene.plot2, aes(x=FDR, y=PR)) + geom_point(aes(colour=method)) +
+ggplot(df.gene.plot2, aes(x=FDR, y=CNT)) + geom_point(aes(colour=method)) +
   geom_line(aes(colour=method)) + facet_grid(.~dataset)
 
+
+methods = list(
+  MAGeCK = run.mageck,
+  DESeq2 = run.DESeq2,
+  edgeR = run.edgeR,
+  sgRSEA = run.sgRSEA,
+  PBNPA = run.PBNPA
+  #ScreenBEAM = run.ScreenBEAM,
+  #CC2 = run.mbttest
+)
+
+selector <- read_delim("inst/extdata/twosided-expr.tsv", delim="\t")
+
+sim.ret <- list()
+for(depth in c(10, 50, 100, 200, 500, 1000)) {
+  for(noise in c(0.1, 0.5, 1.0)) {
+    for(effect in c(0.1, 0.2)) {
+      param <- sprintf("D=%d_N=%.1f_E=%.1f_F=%.2f", depth, noise, effect, 0.1)
+      cache.dir <- file.path("/Users/hwan/Sandbox/CC2Sim/cache/sim", param )
+      dir.create(cache.dir, showWarnings = T, recursive = T, mode = "0777")
+      dat <- load.sim(depth = depth, facs = 0.1, noise=noise, effect=effect)
+      sim.ret[[param]] <- run(dat, methods, selector, cache.dir)
+    }
+  }
+}
+
+
+for(p in names(sim.ret)) {
+  out.path <- file.path("/Users/hwan/Sandbox/CC2Sim/cache/sim", paste0(p, ".pdf") )
+  save_plot(filename = out.path, plot.all(sim.ret[[p]],p), base_height = 5, base_aspect_ratio = 1.6)
+}
+
+load.sim <- function(depth, facs, noise, effect) {
+  raw.url <- "https://raw.githubusercontent.com/hyunhwaj/Crispulator.jl/master/simulation/matrix/scenario_%d_%.2f_%.2f_%.2f.csv"
+  url <- sprintf(raw.url, depth, facs, noise, effect)
+  read.csv(url)
+}
+dat <- load.sim(depth = 10, facs = 0.25, noise=0.1, effect=0.1)
+
+mbetattest(dat, nci=4, na=4, nb=4, alpha=0.05, level='sgRNA')
