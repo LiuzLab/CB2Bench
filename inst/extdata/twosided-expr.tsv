@@ -1,0 +1,10 @@
+name	gene_id	sgrna_id	both.sgRNA.column	both.sgRNA.func	both.gene.column	both.gene.func
+sgRSEA	gene				p.value.twosides	-
+PBNPA	Gene				p.value.twosides	-
+MAGeCK	id	sgrna	p.twosided	-	twosided.p.value	-
+ScreenBEAM	gene				pval	-
+RSA	Gene_ID				score	-
+DESeq2		sgRNA	pvalue	-
+edgeR		sgRNA	PValue	-
+CC2	genes	sgRNA	pvalue	-	gpvalue	-
+CC1

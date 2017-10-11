@@ -25,5 +25,5 @@ vignettes/*.pdf
 *.knit.md
 .Rproj.user
 inst/nbt.3536-S3.xlsx.*
-inst/**
+inst/*.*
 cache/

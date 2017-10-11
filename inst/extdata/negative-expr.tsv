@@ -1,0 +1,10 @@
+name	gene_id	sgrna_id	sgRNA.column	sgRNA.func	gene.column	gene.func
+sgRSEA	gene				p.value.neg	-
+PBNPA	Gene				neg.pvalue	-
+MAGeCK	id	sgrna	p.low	-	neg.score	-
+ScreenBEAM	gene				beta	-
+RSA	Gene_ID		score	-
+DESeq2		sgRNA	stat	-
+edgeR		sgRNA	logFC	-
+CC2	genes	sgRNA	tvalue	+	gtvalue	+
+CC1
