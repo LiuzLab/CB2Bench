@@ -1,3 +1,4 @@
+library(CC2Sim)
 run.mageck <- function(dat) {
   tmp.fname <- tempfile(pattern = "file", tmpdir = tempdir())
 
@@ -85,7 +86,6 @@ run.sgRSEA <- function(dat) {
   pos <- results$gene.pos
   neg <- results$gene.neg
 
-  #ret <- list("gene"=data.frame(gene=row.names(results$gene.neg),score=-results$gene.neg[,2],row.names = NULL))
   df.gene <- dplyr::left_join(rownames_to_column(as.data.frame(pos), "gene"),
                               rownames_to_column(as.data.frame(neg), "gene"), by="gene") %>%
     dplyr::mutate(p.value.twosides=pmin(1,pmin(p.value.pos , p.value.neg )*2))
@@ -176,16 +176,29 @@ plot.AUPRC <- function(tidy) {
   ret
 }
 
-
-run <- function(dat, methods, selector, cache.dir) {
+run <- function(dat, methods, selector, cache.dir = NULL) {
   sim.dat <- dat
   results.sgRNA <- NULL
   results.gene <- NULL
   selector <- as.data.frame(selector)
   for (i in names(methods)) {
     cat("Running", i, "...", "\n")
-    df.ret <- methods[[i]](sim.dat)
-    #i <- names(methods)[1]
+
+
+    cache.sgRNA <-  ifelse(!is.null(cache.dir),file.path(cache.dir, paste0(i, "_", "sgRNA.csv")), NULL)
+    cache.gene <- ifelse(!is.null(cache.dir),file.path(cache.dir, paste0(i, "_", "gene.csv")), NULL)
+
+    df.ret <- list()
+    if( !is.null(cache.sgRNA) || !is.null(cache.gene) ) {
+      df.ret$sgRNA <- ifelse(!is.null(cache.sgRNA), read_csv(cache.sgRNA), NULL)
+      df.ret$gene <- ifelse(!is.null(cahce.gene), read_csv(cache.gene), NULL)
+    }
+    else {
+      df.ret <- methods[[i]](dat)
+      if(!is.null(cache.sgRNA)) write_csv(df.ret$sgRNA, cache.sgRNA)
+      if(!is.null(cache.gene)) write_csv(df.ret$gene, cache.gene)
+    }
+
     gene_id <- selector[selector$name==i,]$gene_id
     sgrna_id <- selector[selector$name==i,]$sgrna_id
     tar.sgrna.column <- selector[selector$name==i, "both.sgRNA.column"]
@@ -196,10 +209,8 @@ run <- function(dat, methods, selector, cache.dir) {
     if(!is.na(sgrna_id)) {
       tmp.sgRNA <- data.frame(sgRNA=df.ret$sgRNA[,sgrna_id],
                               score=sapply(df.ret$sgRNA[,tar.sgrna.column],
-                                          get(tar.sgrna.func)))
-      if(!is.null(cache.dir)) {
-        write_csv(file=system.file(cache.dir, paste0(i, "_", "sgRNA.csv")), df.ret$sgRNA)
-      }
+                                           get(tar.sgrna.func)))
+
       if (is.null(results.sgRNA)) {
         results.sgRNA <- tmp.sgRNA
       } else {
@@ -210,8 +221,8 @@ run <- function(dat, methods, selector, cache.dir) {
     }
     if (!is.na(gene_id)) {
       tmp.gene <- data.frame(gene=df.ret$gene[,gene_id],
-                              score=sapply(df.ret$gene[,tar.gene.column],
-                                           get(tar.gene.func)))
+                             score=sapply(df.ret$gene[,tar.gene.column],
+                                          get(tar.gene.func)))
       if (is.null(results.gene)) {
         results.gene <- tmp.gene
       }
@@ -221,8 +232,10 @@ run <- function(dat, methods, selector, cache.dir) {
       nc <- ncol(results.gene)
       colnames(results.gene)[nc] <- i
     }
-    print(head(results.gene))
+
   }
+  print(head(results.gene))
+}
 
   ret <- list()
   ret$df <- (
@@ -276,15 +289,20 @@ methods = list(
   DESeq2 = run.DESeq2,
   edgeR = run.edgeR,
   sgRSEA = run.sgRSEA,
-  PBNPA = run.PBNPA,
-  ScreenBEAM = run.ScreenBEAM,
-  CC2 = run.mbttest
+  PBNPA = run.PBNPA
+  #ScreenBEAM = run.ScreenBEAM,
+  #CC2 = run.mbttest
 )
 
+library(tidyverse)
+library(cowplot)
 selector <- read_delim("inst/extdata/twosided-expr.tsv", delim="\t")
 load("inst/extdata/nature-biotech.Rdata")
 
-cache.dir <- system.file("~/Users/hwan/Sandbox/CC2Sim/cache/")
+cache.dir <- "/Users/hwan/Sandbox/CC2Sim/cache/"
+dir.create(cache.dir, showWarnings = T, recursive = T, mode = "0777")
+
+
 ret <- run(dataset$RT112, methods, selector, cache.dir)
 rtt.x <- plot.all(ret, "ROC", "RTT12 dataset benchmark (AUCROC)")
 rtt.y <- plot.all(ret, "PR", "RTT12 dataset benchmark (AUCPRC)")
