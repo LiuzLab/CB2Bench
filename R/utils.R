@@ -16,8 +16,12 @@ run.mageck <- function(dat) {
   write.table(file = tmp.fname, dat.mageck, sep="\t", quote = F, row.names = F)
   mageck.cmd <- "mageck"
 
-  treatment.id <- paste0( colnames(dat.mageck)[3:6], collapse="," )
-  control.id <- paste0( colnames(dat.mageck)[7:10], collapse="," )
+  nx <- ncol(dat)-4
+  control.samples <- colnames(dat)[5:(5+nx/2-1)]
+  case.samples <- colnames(dat)[(5+nx/2):(5+nx-1)]
+
+  treatment.id <- paste0( case.samples, collapse="," )
+  control.id <- paste0( control.samples, collapse="," )
 
   out.dir <- paste0(tempdir(),"/", "mageck")
   cmd  <- paste(mageck.cmd, "test", "-k", tmp.fname, "-t", treatment.id, "-c", control.id,
@@ -26,13 +30,15 @@ run.mageck <- function(dat) {
   system(cmd)
   df.gene <- read.table(paste0(out.dir, ".gene_summary.txt"),
                         sep="\t", row.names = NULL, head=T) %>%
-    mutate(pvalue=pmin(1,pmin(neg.p.value, pos.p.value)*2)) %>%
-    select(gene=id, pvalue=pvalue)
+    #mutate(pvalue=pmin(1,pmin(neg.p.value, pos.p.value)*2)) %>%
+    select(gene=id, score=neg.score)
+  df.gene$score <- -df.gene$score
 
 
   df.sgRNA <- read.table(paste0(out.dir, ".sgrna_summary.txt"),
                          sep="\t", row.names = NULL, head=T) %>%
-    select(sgRNA=sgrna, pvalue=p.twosided)
+    select(sgRNA=sgrna, score=p.low)
+  df.sgRNA$score <- -df.sgRNA$score
   list("gene"=df.gene, "sgRNA"=df.sgRNA)
 }
 
@@ -49,12 +55,10 @@ run.mageck <- function(dat) {
 #' run.mbttest(dat)
 run.mbttest <- function(dat) {
   nx <- (ncol(dat)-4)
-  df.ret <- mbetattest(X=dat, nci=4, na=nx/2, nb=nx/2, alpha=0.05)
-  df.gene <- df.ret %>% group_by(Gene) %>%
-    summarise(tmp=mean(gpvalue)) %>%
-    select(gene=Gene, pvalue=tmp) %>% as.data.frame
-  df.sgRNA <- select(df.ret, sgRNA=sgRNA, pvalue=p_value) %>%
-    as.data.frame
+  df.sgRNA <- mbetattest(X=dat, nci=4, na=nx/2, nb=nx/2, alpha=0.05, level="sgRNA") %>%
+    dplyr::select(sgRNA=sgRNA, score=tvalue)
+  df.gene <- mbetattest(X=dat, nci=4, na=nx/2, nb=nx/2, alpha=0.05, level="gene") %>%
+    dplyr::select(gene=genes, score=gtvalue)
   list("gene"=df.gene, "sgRNA"=df.sgRNA)
 }
 
@@ -72,7 +76,7 @@ run.DESeq2<-function(dat){
   dds <- DESeqDataSetFromMatrix(countData = df.deseq2, colData = col.data, design = ~ condition)
   dds <- DESeq(dds)
   res <- as.data.frame(results(dds))
-  list("sgRNA"=data.frame(sgRNA=rownames(res), pvalue=res$pvalue))
+  list("sgRNA"=data.frame(sgRNA=rownames(res), score=-res$stat))
 }
 
 run.edgeR <- function(dat) {
@@ -83,7 +87,80 @@ run.edgeR <- function(dat) {
   res2<- estimateCommonDisp(res1)
   res3<- estimateTagwiseDisp(res2)
   res4<- exactTest(res3)
-  list("sgRNA"=data.frame(sgRNA=dat$sgRNA, pvalue=res4$table$PValue))
+  list("sgRNA"=data.frame(sgRNA=dat$sgRNA, score=-res4$table$logFC))
+}
+
+run.ScreenBEAM <- function(dat) {
+  tmp.name <- tempfile()
+  save(dat, file=tmp.name)
+  tmp.outname <- tempfile()
+  cmd <- paste("Rscript", system.file("extdata", "ScreenBEAM.R", package="CC2Sim"), tmp.name, tmp.outname)
+  system(cmd)
+  load(tmp.outname)
+  list("gene"=df.gene)
+}
+
+run.sgRSEA <- function(dat) {
+  nx <- ncol(dat)-4
+  control.samples <- colnames(dat)[5:(5+nx/2-1)]
+  case.samples <- colnames(dat)[(5+nx/2):(5+nx-1)]
+
+  dat <- UQnormalize(dat, trt=case.samples, ctrl=control.samples)
+  results <- sgRSEA(dat=dat, multiplier=30)
+
+  #pos <- data.frame(gene=row.names(results$gene.pos),  pvalue=results$gene.pos[,3])
+  #neg <- data.frame(gene=row.names(results$gene.neg),  pvalue=results$gene.neg[,3])
+
+  ret <- list("gene"=data.frame(gene=row.names(results$gene.neg),score=-results$gene.neg[,2],row.names = NULL))
+  #ret <- list("gene"=as.data.frame(dplyr::left_join(pos, neg, by="gene") %>%
+  #       dplyr::mutate(pvalue=pmin(1,pmin(pvalue.x, pvalue.y)*2)) %>%
+  #       dplyr::select(gene=gene, pvalue=pvalue)))
+  ret
+}
+
+run.PBNPA <- function(dat) {
+  nx <- ncol(dat)-4
+
+  datlist <- list()
+  for(i in 1:3) {
+    datlist[[i]] <- data.frame(sgRNA = dat$sgRNA,
+                               Gene = dat$gene,
+                               initial.count = dat[,i+4],
+                               final.count = dat[,i+4+(nx/2)])
+  }
+  result <- PBNPA(datlist)$final.result
+
+  #ret <- list("gene"= result %>%
+  #              dplyr::mutate(
+  #                pvalue=pmin(1,pmin(pos.pvalue, neg.pvalue)*2)) %>%
+  #              dplyr::select(gene=Gene, pvalue=pvalue))
+  ret <- list("gene"=result %>%
+                select(gene=Gene, score=neg.pvalue))
+  ret$gene[,"score"] <- -ret$gene[,"score"]
+  ret
+}
+
+run.RSA <- function(dat) {
+  nx <- ncol(dat)-4
+  ctrl.median <- dat[,5:(5+nx/2-1)] %>%
+    apply(1, median, na.rm = TRUE)
+
+  test.median <- dat[,(5+nx/2):(5+nx-1)] %>%
+    apply(1, median, na.rm = TRUE)
+
+  FC <- test.median / ctrl.median
+  df.RSA <- data.frame(Gene_ID=dat$gene,
+                       Well_ID=dat$sgRNA,
+                       Score=FC)
+
+  ret.RSA <- RSA(df.RSA, LB=0, UB=1e8)
+  ret.gene <- ret.RSA %>% dplyr::group_by(Gene_ID) %>%
+    dplyr::summarise(score = mean(LogP)) %>%
+    dplyr::select(gene = Gene_ID, score = score)
+  ret.gene$score <- -ret.gene$score
+
+  ret <- list("gene"=ret.gene)
+
 }
 
 #' Load a simulation file from \href{https://github.com/hyunhwaj/Crispulator.jl}{hyunhwaj/Crispulator.jl}
@@ -105,4 +182,18 @@ load.sim <- function(depth, facs, noise, effect) {
   url <- sprintf(raw.url, depth, facs, noise, effect)
   read.csv(url)
 }
+
+#' Load a tiny simulation file
+#'
+#' @return a data frame of a simulated data with $200$ sgRNAs
+#' @export
+#'
+#' @examples
+#' dat <- load.sample()
+#' head(dat)
+load.sample <- function() {
+  raw.url <- "https://raw.githubusercontent.com/hyunhwaj/Crispulator.jl/master/simulation/matrix/scenario_1000_0.10_1.00_0.20.csv"
+  read.csv(raw.url)[1:200,]
+}
+
 

@@ -1,25 +1,56 @@
-run.simulation <- function(depth = 10,
-                           facs = 0.1,
-                           noise = 2.0,
-                           effect = 0.05) {
-  cat(
-    "current parameter:",
-    sprintf("depth = %d, facs = %f, noise = %f, effect = %f\n", depth, facs, noise, effect)
-  )
-  methods <- list(
+plot.AUPRC <- function(tidy) {
+  curve <- tibble()
+  prv <- tibble()
+  for(m in unique(tidy$methods)) {
+    x <- tidy %>% filter(methods == m)
+    x[is.na(x$score),"score"] <- -1e8
+    fg <- x$score[x$label == 1]
+    bg <- x$score[x$label == 0]
+    pr <- pr.curve(scores.class0 = fg, scores.class1 = bg, curve = T)
+    y <- tibble(
+      method=m,
+      x=pr$curve[,1], y=pr$curve[,2], density=pr$curve[,3]
+    )
+    print(y)
+    curve <- bind_rows(curve, y)
+    prv <- bind_rows(prv, tibble(method=m,
+                                 AUPRC=pr$auc.integral))
+  }
+
+  #curve <- curve %>% arrange(desc(y))
+
+  ret <- list()
+  ret$bar.plot <- ggplot(prv, aes(x=method, y=AUPRC)) +
+    geom_bar(stat = "identity", aes(fill=method)) +
+    theme(axis.title.x=element_blank(),
+          axis.text.x=element_blank(),
+          axis.ticks.x=element_blank())
+
+  ret$curve.plot <- ggplot(curve, aes(x=x, y=y)) +
+    geom_step(aes(colour=method)) +
+    ylab("Precision") + xlab("Recall") + ylim(0,1)
+
+  ret
+}
+
+
+run <- function(dat, methods = list(
     mageck = run.mageck,
     DESeq2 = run.DESeq2,
     edgeR = run.edgeR,
     sgRSEA = run.sgRSEA,
+    PBNA = run.PBNPA,
     #screenBEAM = run.ScreenBEAM,
     CC2 = run.mbttest
-  )
-  sim.dat <- load.sim(depth, facs, noise, effect)
+  )) {
+
+  sim.dat <- dat
   results.sgRNA <- NULL
   results.gene <- NULL
   for (i in names(methods)) {
     cat("Running", i, "...", "\n")
     df.ret <- methods[[i]](sim.dat)
+
     if(!is.null(df.ret$sgRNA)) {
       if (is.null(results.sgRNA)) {
         results.sgRNA <- df.ret$sgRNA
@@ -29,7 +60,6 @@ run.simulation <- function(depth = 10,
       nc <- ncol(results.sgRNA)
       colnames(results.sgRNA)[nc] <- i
     }
-
     if (!is.null(df.ret$gene)) {
       if (is.null(results.gene)) {
         results.gene <- df.ret$gene
@@ -40,6 +70,7 @@ run.simulation <- function(depth = 10,
       nc <- ncol(results.gene)
       colnames(results.gene)[nc] <- i
     }
+    print(head(results.gene))
   }
 
   ret <- list()
@@ -51,11 +82,12 @@ run.simulation <- function(depth = 10,
       )) %>%
       select(-class)
   )
+  ret$sgRNA <- df.sgRNA.summary
 
-  ret$tidy <- (tidy.sgRNA.summary <- df.sgRNA.summary %>%
-                 gather(methods, score,-sgRNA,-label))
+  ret$tidy.sgRNA <- (tidy.sgRNA.summary <- df.sgRNA.summary %>%
+                       gather(methods, score,-sgRNA,-label))
 
-  ret$plot <-
+  ret$plot.roc.sgRNA <-
     ggplot(tidy.sgRNA.summary, aes(
       m = score,
       d = label,
@@ -73,11 +105,15 @@ run.simulation <- function(depth = 10,
 
   tidy.gene.summary <- df.gene.summary %>%
     gather(methods, score, -gene, -label)
+  ret$tidy.gene <- tidy.gene.summary
+  ret$gene <- df.gene.summary
 
-  ret$plot.gene <- ggplot(tidy.gene.summary, aes(m=score, d=label, color= methods)) +
+  ret$plot.roc.gene <- ggplot(tidy.gene.summary, aes(m=score, d=label, color= methods)) +
     geom_roc(labels=FALSE)
 
-  ret$tidy.gene <- tidy.gene.summary
+  AUPRC.sgRNA <- plot.AUPRC(ret$tidy.sgRNA)
+  AUPRC.gene <- plot.AUPRC(ret$tidy.gene)
+  ret$plot.prc.sgRNA <- AUPRC.sgRNA$curve.plot
+  ret$plot.prc.gene <- AUPRC.gene$curve.plot
   ret
 }
-
