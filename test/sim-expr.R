@@ -315,20 +315,33 @@ library(PBNPA)
 library(CRISPRCloud2)
 library(plotROC)
 library(PRROC)
-selector <- read_delim("inst/extdata/negative-expr.tsv", delim="\t")
+#selector <- read_delim("inst/extdata/negative-expr.tsv", delim="\t")
+selector <- read_delim("inst/extdata/twosided-expr.tsv", delim="\t")
 load("inst/extdata/nature-biotech.Rdata")
 
-cache.dir <- "/Users/hwan/Sandbox/CC2Sim/cache/RT112"
-dir.create(cache.dir, showWarnings = T, recursive = T, mode = "0777")
-ret <- run(dataset$RT112, methods, selector, cache.dir)
-rtt.x <- plot.all(ret, "ROC", "RTT12 dataset benchmark (AUCROC)")
-rtt.y <- plot.all(ret, "PR", "RTT12 dataset benchmark (AUCPRC)")
+grid <- NULL
+sz <- 0
+ret <- list()
+for(d in names(dataset)) {
+  df.dat <- dataset[[d]]
+  cache.dir <- file.path("/Users/hwan/Sandbox/CC2Sim/cache/nature-biotech", d  )
+  dir.create(cache.dir, showWarnings = T, recursive = T, mode = "0777")
+  ret[[d]] <- run(df.dat, methods, selector, cache.dir)
+  x <- plot.all(ret[[d]], "ROC", paste0(d, " dataset benchmark (AUCROC)"))
+  y <- plot.all(ret[[d]], "PR", paste0(d, " dataset benchmark (AUCPRC)"))
 
-cache.dir <- "/Users/hwan/Sandbox/CC2Sim/cache/UMUC3"
-dir.create(cache.dir, showWarnings = T, recursive = T, mode = "0777")
-ret2 <- run(dataset$UMUC3, methods, selector, cache.dir)
-umuc.x  <- plot.all(ret2, "ROC", "UMUC3 dataset benchmark (AUCROC)")
-umuc.y  <- plot.all(ret2, "PR", "UMUC3 dataset benchmark (AUCPRC)")
+  out.path <- file.path("/Users/hwan/Sandbox/CC2Sim/cache/nature-biotech",  paste0("benchmark_", d, ".pdf"))
+  xy <- plot_grid(x, y)
+
+  if(is.null(grid)) {
+    grid <- xy
+  } else {
+    sz <- sz + 1
+    grid <- plot_grid(grid, xy, ncol=1, rel_heights = c(sz, 1))
+  }
+}
+save_plot(filename = "/Users/hwan/Sandbox/CC2Sim/cache/nature-biotech/benchmark.pdf", grid, base_height = 20, base_aspect_ratio = 1, limitsize=F)
+
 both <- plot_grid(rtt.x, umuc.x, rtt.y, umuc.y)
 
 rank.heatmap <- function(gene.ret, filename) {
@@ -350,3 +363,55 @@ rank.heatmap <- function(gene.ret, filename) {
 }
 rank.heatmap(ret$gene, "RT112-gene-heatmap.pdf")
 rank.heatmap(UMUC3.ret$gene, "UMUC3-gene-heatmap.pdf")
+
+df.sgrna.plot <- tibble()
+for(d in names(ret)) {
+  df.sgrna <- ret[[d]]$tidy.sgRNA
+  df.sgrna$score <- -df.sgrna$score
+  for(mat in unique(df.sgrna$methods)) {
+    tmp <- df.sgrna %>% filter(methods==mat)
+    for(fdr in seq(0.1,0.9,0.1)) {
+      precision <- sum(tmp$score < fdr & tmp$label == 1) / max(1,sum(tmp$score < fdr))
+      df.sgrna.plot <- bind_rows(df.sgrna.plot, tibble(dataset=d, method=mat, FDR=fdr, PR=precision))
+    }
+  }
+}
+
+ggplot(df.sgrna.plot, aes(x=FDR, y=PR)) + geom_point(aes(colour=method)) + facet_grid(.~dataset)
+
+
+df.gene.plot <- tibble()
+for(d in names(ret)) {
+  if(d == "CRISPRi.RT112") next()
+  df.gene <- ret[[d]]$tidy.gene
+  df.gene$score <- p.adjust(-df.gene$score, method = "fdr")
+  for(mat in unique(df.gene$methods)) {
+    tmp <- df.gene %>% filter(methods==mat)
+    for(fdr in seq(0.1,0.9,0.05)) {
+      precision <- sum(tmp$score < fdr & tmp$label == 1) / max(1,sum(tmp$score < fdr))
+      df.gene.plot <- bind_rows(df.gene.plot, tibble(dataset=d, method=mat, FDR=fdr, PR=precision))
+    }
+  }
+}
+
+ggplot(df.gene.plot, aes(x=FDR, y=PR)) + geom_point(aes(colour=method)) +
+  geom_line(aes(colour=method)) + facet_grid(.~dataset)
+
+
+df.gene.plot2 <- tibble()
+for(d in names(ret)) {
+  if(d == "CRISPRi.RT112") next()
+  df.gene <- ret[[d]]$tidy.gene
+  df.gene$score <- p.adjust(-df.gene$score, method = "fdr")
+  for(mat in unique(df.gene$methods)) {
+    tmp <- df.gene %>% filter(methods==mat)
+    for(fdr in seq(0.1,0.9,0.05)) {
+      precision <- sum(tmp$score < fdr & tmp$label == 1) / max(1,sum(tmp$score < fdr))
+      df.gene.plot2 <- bind_rows(df.gene.plot2, tibble(dataset=d, method=mat, FDR=fdr, PR=precision))
+    }
+  }
+}
+
+ggplot(df.gene.plot2, aes(x=FDR, y=PR)) + geom_point(aes(colour=method)) +
+  geom_line(aes(colour=method)) + facet_grid(.~dataset)
+

@@ -1,4 +1,4 @@
-name	gene_id	sgrna_id	both.sgRNA.column	both.sgRNA.func	both.gene.column	both.gene.func
+name	gene_id	sgrna_id	sgRNA.column	sgRNA.func	gene.column	gene.func
 sgRSEA	gene				p.value.twosides	-
 PBNPA	Gene				p.value.twosides	-
 MAGeCK	id	sgrna	p.twosided	-	twosided.p.value	-
