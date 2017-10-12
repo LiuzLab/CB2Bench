@@ -315,8 +315,8 @@ library(PBNPA)
 library(CRISPRCloud2)
 library(plotROC)
 library(PRROC)
-selector <- read_delim("inst/extdata/negative-expr.tsv", delim="\t")
-#selector <- read_delim("inst/extdata/twosided-expr.tsv", delim="\t")
+#selector <- read_delim("inst/extdata/negative-expr.tsv", delim="\t")
+selector <- read_delim("inst/extdata/twosided-expr.tsv", delim="\t")
 load("inst/extdata/nature-biotech.Rdata")
 
 grid <- NULL
@@ -370,7 +370,8 @@ for(d in names(ret)) {
   df.sgrna$score <- -df.sgrna$score
   for(mat in unique(df.sgrna$methods)) {
     tmp <- df.sgrna %>% filter(methods==mat)
-    for(fdr in seq(0.1,0.9,0.1)) {
+    for(fdr in seq(-10,-2,1)) {
+
       precision <- sum(tmp$score < fdr & tmp$label == 1) / max(1,sum(tmp$score < fdr))
       df.sgrna.plot <- bind_rows(df.sgrna.plot, tibble(dataset=d, method=mat, FDR=fdr, PR=precision))
     }
@@ -384,18 +385,25 @@ df.gene.plot <- tibble()
 for(d in names(ret)) {
   if(d == "CRISPRi.RT112") next()
   df.gene <- ret[[d]]$tidy.gene
-  #df.gene$score <- p.adjust(-df.gene$score, method = "fdr")
+  df.gene$score <- -df.gene$score
   for(mat in unique(df.gene$methods)) {
     tmp <- df.gene %>% filter(methods==mat)
-    for(fdr in seq(0.1,0.9,0.05)) {
-      precision <- sum(tmp$score < fdr & tmp$label == 1) / max(1,sum(tmp$score < fdr))
-      df.gene.plot <- bind_rows(df.gene.plot, tibble(dataset=d, method=mat, FDR=fdr, PR=precision))
+    if(mat!="CC2") {
+      tmp$score <- p.adjust(tmp$score, method="fdr")
+    }
+    for(fdr in seq(-10,-2,1)) {
+      fdr <- 10^fdr
+      TP <- sum(tmp$score < fdr & tmp$label == 1)
+      FP <- sum(tmp$score < fdr & tmp$label == 0)
+      precision <- TP / max(1,(TP+FP))
+      #precision <- sum(tmp$score < fdr & tmp$label == 1) / max(1,sum(tmp$score < fdr))
+      df.gene.plot <- bind_rows(df.gene.plot, tibble(dataset=d, method=mat, FDR=log10(fdr), PR=precision, TP=TP, FP=FP))
     }
   }
 }
-
-ggplot(df.gene.plot, aes(x=FDR, y=PR)) + geom_point(aes(colour=method)) +
-  geom_line(aes(colour=method)) + facet_grid(.~dataset)
+View(df.gene.plot)
+ ggplot(df.gene.plot, aes(x=FDR, y=PR)) + geom_point(aes(colour=method), alpha=0.5) +
+  geom_line(aes(colour=method), alpha=0.5) + facet_grid(.~dataset) + ylim(0,1)
 
 
 df.gene.plot2 <- tibble()
