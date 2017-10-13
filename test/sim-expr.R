@@ -138,7 +138,7 @@ load.sim <- function(depth, facs, noise, effect) {
   read.csv(url)
 }
 
-
+load("inst/extdata/nature-biotech.Rdata")
 read_delim("inst/extdata/twosided-expr.tsv", delim="\t")
 
 plot.AUPRC <- function(tidy) {
@@ -294,8 +294,6 @@ run <- function(dat, methods, selector, cache.dir = NULL) {
   ret
 }
 
-dat <- load.sample()
-
 methods = list(
   MAGeCK = run.mageck,
   DESeq2 = run.DESeq2,
@@ -315,8 +313,8 @@ library(PBNPA)
 library(CRISPRCloud2)
 library(plotROC)
 library(PRROC)
-#selector <- read_delim("inst/extdata/negative-expr.tsv", delim="\t")
-selector <- read_delim("inst/extdata/twosided-expr.tsv", delim="\t")
+selector <- read_delim("inst/extdata/negative-expr.tsv", delim="\t")
+#selector <- read_delim("inst/extdata/twosided-expr.tsv", delim="\t")
 load("inst/extdata/nature-biotech.Rdata")
 
 grid <- NULL
@@ -406,23 +404,6 @@ View(df.gene.plot)
   geom_line(aes(colour=method), alpha=0.5) + facet_grid(.~dataset) + ylim(0,1)
 
 
-df.gene.plot2 <- tibble()
-for(d in names(ret)) {
-  if(d == "CRISPRi.RT112") next()
-  df.gene <- ret[[d]]$tidy.gene
-  df.gene$score <- p.adjust(-df.gene$score, method = "fdr")
-  for(mat in unique(df.gene$methods)) {
-    tmp <- df.gene %>% filter(methods==mat)
-    for(fdr in seq(0.1,0.9,0.05)) {
-      #precision <- sum(tmp$score < fdr & tmp$label == 1) / max(1,sum(tmp$score < fdr))
-      precision <- sum(tmp$score < fdr & tmp$label == 1)
-      df.gene.plot2 <- bind_rows(df.gene.plot2, tibble(dataset=d, method=mat, FDR=fdr, CNT=precision))
-    }
-  }
-}
-
-ggplot(df.gene.plot2, aes(x=FDR, y=CNT)) + geom_point(aes(colour=method)) +
-  geom_line(aes(colour=method)) + facet_grid(.~dataset)
 
 
 methods = list(
@@ -430,9 +411,9 @@ methods = list(
   DESeq2 = run.DESeq2,
   edgeR = run.edgeR,
   sgRSEA = run.sgRSEA,
-  PBNPA = run.PBNPA
+  PBNPA = run.PBNPA,
   #ScreenBEAM = run.ScreenBEAM,
-  #CC2 = run.mbttest
+  CC2 = run.mbttest
 )
 
 selector <- read_delim("inst/extdata/twosided-expr.tsv", delim="\t")
