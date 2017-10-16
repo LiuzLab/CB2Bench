@@ -113,6 +113,11 @@ run.PBNPA <- function(dat) {
   ret <- list("gene"=result)
 }
 
+run.ibb <- function(dat) {
+  nx <- ncol(dat)-4
+  ctrl <- dat[,5:(5+nx/2-1)]
+  case <- dat[,(5+nx/2):(5+nx-1)]
+}
 run.RSA <- function(dat) {
   nx <- ncol(dat)-4
   ctrl.median <- dat[,5:(5+nx/2-1)] %>%
@@ -422,11 +427,13 @@ sim.ret <- list()
 for(depth in c(10, 50, 100, 200, 500, 1000)) {
   for(noise in c(0.1, 0.5, 1.0)) {
     for(effect in c(0.1, 0.2)) {
-      param <- sprintf("D=%d_N=%.1f_E=%.1f_F=%.2f", depth, noise, effect, 0.1)
-      cache.dir <- file.path("/Users/hwan/Sandbox/CC2Sim/cache/sim", param )
-      dir.create(cache.dir, showWarnings = T, recursive = T, mode = "0777")
-      dat <- load.sim(depth = depth, facs = 0.1, noise=noise, effect=effect)
-      sim.ret[[param]] <- run(dat, methods, selector, cache.dir)
+      for(facs in c(0.1, 0.25)) {
+        param <- sprintf("D=%d_N=%.1f_E=%.1f_F=%.2f", depth, noise, effect, facs)
+        cache.dir <- file.path("/Users/hwan/Sandbox/CC2Sim/cache/sim", param )
+        dir.create(cache.dir, showWarnings = T, recursive = T, mode = "0777")
+        dat <- load.sim(depth = depth, facs = facs, noise=noise, effect=effect)
+        sim.ret[[param]] <- run(dat, methods, selector, cache.dir)
+      }
     }
   }
 }

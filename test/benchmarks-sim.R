@@ -72,8 +72,25 @@ for(dset in unique(all.df$dataset)) {
   }
 }
 #df.gene.plot$FDR <- -df.gene.plot$FDR
-df.gene.plot %>% filter(measure == 'recall') %>% filter(facs==0.25, effect==0.1) %>%
-  ggplot(aes(x=FDR, y=value)) + geom_point(aes(colour=method, shape=method), alpha=0.5) +
-    geom_line(aes(colour=method), alpha=0.5) + facet_grid(depth~noise) + ylim(0,1) +
-    scale_x_discrete(limits=as.character(seq(10,1,-1)))
 
+plots <- list()
+for(mm in c("recall")) {
+  for(ff in c(0.1, 0.25)) { 
+    for(ee in c(0.1, 0.2) ) {
+      p <- df.gene.plot %>% filter(measure == mm) %>% filter(facs==ff, effect==ee) %>%
+        ggplot(aes(x=-FDR, y=value)) + geom_point(aes(colour=method, shape=method), alpha=0.5) +
+        geom_line(aes(colour=method), alpha=0.5) + facet_grid(depth~noise) + ylim(0,1) +
+        scale_x_discrete(limits=as.character(seq(10,1,-1))) + xlab("FDR") + ylab(mm) + 
+        ggtitle(sprintf("FACS = %.2f & effect size = %.1f", ff, ee)) + theme(legend.position="none")
+      key <- sprintf("%s_%.2f_%.1f", mm, ff, ee)
+      plots[[key]] <- p
+    }
+  }
+}
+
+#grobs <- ggplotGrob(plots$`F-measure_0.10_0.1`)$grobs
+#legend <- grobs[[which(sapply(grobs, function(x) x$name) == "guide-box")]]
+
+
+pt <- plot_grid(plot_grid(plotlist=plots, ncol=2) , legend, rel_widths = c(1, .1))
+save_plot(pt, filename = "sim-ret-rc.pdf", base_height = 12, base_width = 14)

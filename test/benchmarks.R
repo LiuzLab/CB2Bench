@@ -10,6 +10,9 @@ m_id$sgRSEA_gene.csv <- "FDR.neg"
 
 all.df <- NULL
 
+
+load("inst/extdata/nature-biotech.Rdata")
+
 file.name <- "cache/nature-biotech/*/*_gene.csv"
 for(f in Sys.glob(file.name)) {
   m <- basename(f)
@@ -55,19 +58,22 @@ for(dset in unique(all.df$dataset)) {
     }
   }
 }
-ggplot(df.gene.plot, aes(x=FDR, y=value)) + geom_point(aes(colour=method, shape=method), alpha=0.5) +
-  geom_line(aes(colour=method), alpha=0.5) + facet_grid(dataset~measure) + ylim(0,1) +
-  scale_x_discrete(limits=seq(-10,-1,1))
+
+pt <- df.gene.plot %>% filter(measure=="F-measure") %>%
+  ggplot( aes(x=-FDR, y=value)) + geom_point(aes(colour=method, shape=method), alpha=0.5) +
+  geom_line(aes(colour=method), alpha=0.5) + facet_grid(.~dataset) + ylim(0,1) + scale_x_reverse(breaks = c(1,5,10))+ xlab("FDR") + ylab("F-measure")
+save_plot(pt, filename = "nat-biotech.pdf", base_height = 4, base_width = 8)
+
 
 for(dset in unique(all.df$dataset)) {
-  x <- all.df %>% filter(dataset==dset, essential==1) %>% select(-1,-5) %>% spread(method, fdr) %>%
-    remove_rownames() %>%
-    column_to_rownames("gene")
+  ess <- dataset[[dset]] %>% mutate(essential=ifelse(class=="decreasing",1,0)) %>%
+    group_by(gene) %>%
+    summarise(essential=mean(essential)) %>%
+    select(gene, essential)
 
-  x <- ceiling(-log10(x))
-  x[x>=5] <- 5
-  x[is.infinite(as.matrix(x))] <- 5
-  library(pheatmap)
-  pheatmap(x)
+  x <- all.df %>% filter(dataset==dset) %>% select(-1,-5) %>% spread(method, fdr) %>%
+    remove_rownames() %>% left_join(ess, by="gene")
+
+  write.table(x, file = sprintf("%s.tsv", dset), sep="\t", row.names = F)
 }
 
