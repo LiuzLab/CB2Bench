@@ -1,4 +1,17 @@
 library(CC2Sim)
+library(tidyverse)
+library(cowplot)
+library(edgeR)
+library(DESeq2)
+library(sgRSEA)
+library(PBNPA)
+library(CRISPRCloud2)
+library(plotROC)
+library(PRROC)
+selector <- read_delim("inst/extdata/negative-expr.tsv", delim="\t")
+#selector <- read_delim("inst/extdata/twosided-expr.tsv", delim="\t")
+load("inst/extdata/nature-biotech.Rdata")
+
 run.mageck <- function(dat) {
   tmp.fname <- tempfile(pattern = "file", tmpdir = tempdir())
 
@@ -49,8 +62,14 @@ run.DESeq2<-function(dat){
 
   dds <- DESeqDataSetFromMatrix(countData = df.deseq2, colData = col.data, design = ~ condition)
   dds <- DESeq(dds)
-  res <- rownames_to_column(as.data.frame(results(dds)), "sgRNA")
-  list("sgRNA"=res)
+
+  res.sgRNA <- rownames_to_column(as.data.frame(results(dds)), "sgRNA")
+  res.gene <- res.sgRNA %>% separate(sgRNA, c("gene", "no"))
+  res.gene <- left_join(res.sgRNA, select(dat, gene, sgRNA), by="sgRNA") %>% group_by(gene) %>%
+    summarise(pvalue=pchisq(-2*sum(log(pvalue)), n()*2, lower.tail=F),
+              log2FoldChange=mean(log2FoldChange), stat=mean(stat))
+  res.gene$padj <- p.adjust(res.gene$pvalue, method="fdr")
+  list("sgRNA"=res.sgRNA, "gene"=res.gene)
 }
 
 run.edgeR <- function(dat) {
@@ -113,10 +132,23 @@ run.PBNPA <- function(dat) {
   ret <- list("gene"=result)
 }
 
+rep.row<-function(x,n){
+  matrix(rep(x,each=n),nrow=n)
+}
+
 run.ibb <- function(dat) {
-  nx <- ncol(dat)-4
-  ctrl <- dat[,5:(5+nx/2-1)]
-  case <- dat[,(5+nx/2):(5+nx-1)]
+  nx <- (ncol(dat)-4)/2
+  tmp <- dat
+  dat <- dat[,-(1:4)]
+  N <- colSums(dat)
+  G <- c(rep("G1", nx), rep("G2", nx))
+  ret <- ibb.test( dat,
+            rep.row(N, NROW(dat)),
+            G, n.threads = -1)
+  ret.sgRNA <- data.frame(sgRNA=tmp$sgRNA, gene=tmp$gene, pvalue=ret$p.value, fc = ret$fc)
+  ret.gene <- ret.sgRNA %>% group_by(gene) %>% summarise(pvalue=pchisq(-2*sum(log(pvalue)), n()*2, lower.tail=F),
+                                                         fc=mean(fc))
+  list("gene"=ret.gene, "sgRNA"=ret.sgRNA)
 }
 run.RSA <- function(dat) {
   nx <- ncol(dat)-4
@@ -143,9 +175,6 @@ load.sim <- function(depth, facs, noise, effect) {
   read.csv(url)
 }
 
-load("inst/extdata/nature-biotech.Rdata")
-read_delim("inst/extdata/twosided-expr.tsv", delim="\t")
-
 plot.AUPRC <- function(tidy) {
   curve <- tibble()
   prv <- tibble()
@@ -159,7 +188,6 @@ plot.AUPRC <- function(tidy) {
       method=m,
       x=pr$curve[,1], y=pr$curve[,2], density=pr$curve[,3]
     )
-    print(y)
     curve <- bind_rows(curve, y)
     prv <- bind_rows(prv, tibble(method=m,
                                  AUPRC=pr$auc.integral))
@@ -245,8 +273,7 @@ run <- function(dat, methods, selector, cache.dir = NULL) {
 
       if (is.null(results.gene)) {
         results.gene <- tmp.gene
-      }
-      else {
+      } else {
         results.gene <- dplyr::left_join(results.gene, tmp.gene, by = "gene")
       }
       nc <- ncol(results.gene)
@@ -268,13 +295,13 @@ run <- function(dat, methods, selector, cache.dir = NULL) {
   ret$tidy.sgRNA <- (tidy.sgRNA.summary <- df.sgRNA.summary %>%
                        gather(methods, score,-sgRNA,-label))
 
-  ret$plot.roc.sgRNA <-
-    ggplot(tidy.sgRNA.summary, aes(
-      m = score,
-      d = label,
-      color = methods
-    )) +
-    geom_roc(labels = FALSE)
+  #ret$plot.roc.sgRNA <-
+  #  ggplot(tidy.sgRNA.summary, aes(
+  #    m = score,
+  #    d = label,
+  #    color = methods
+  #  )) +
+  #  geom_roc(labels = FALSE)
 
   # Not think about gene level, yet
   tmp <- sim.dat %>% group_by(gene) %>%
@@ -289,13 +316,13 @@ run <- function(dat, methods, selector, cache.dir = NULL) {
   ret$tidy.gene <- tidy.gene.summary
   ret$gene <- df.gene.summary
 
-  ret$plot.roc.gene <- ggplot(tidy.gene.summary, aes(m=score, d=label, color= methods)) +
-    geom_roc(labels=FALSE)
+  #ret$plot.roc.gene <- ggplot(tidy.gene.summary, aes(m=score, d=label, color= methods)) +
+  #  geom_roc(labels=FALSE)
 
-  AUPRC.sgRNA <- plot.AUPRC(ret$tidy.sgRNA)
-  AUPRC.gene <- plot.AUPRC(ret$tidy.gene)
-  ret$plot.prc.sgRNA <- AUPRC.sgRNA$curve.plot
-  ret$plot.prc.gene <- AUPRC.gene$curve.plot
+  #AUPRC.sgRNA <- plot.AUPRC(ret$tidy.sgRNA)
+  #AUPRC.gene <- plot.AUPRC(ret$tidy.gene)
+  #ret$plot.prc.sgRNA <- AUPRC.sgRNA$curve.plot
+  #ret$plot.prc.gene <- AUPRC.gene$curve.plot
   ret
 }
 
@@ -306,34 +333,26 @@ methods = list(
   sgRSEA = run.sgRSEA,
   PBNPA = run.PBNPA,
   ScreenBEAM = run.ScreenBEAM,
-  CC2 = run.mbttest
+  CC2 = run.mbttest,
+  CC1 = run.ibb
 )
 
-library(tidyverse)
-library(cowplot)
-library(edgeR)
-library(DESeq2)
-library(sgRSEA)
-library(PBNPA)
-library(CRISPRCloud2)
-library(plotROC)
-library(PRROC)
-selector <- read_delim("inst/extdata/negative-expr.tsv", delim="\t")
-#selector <- read_delim("inst/extdata/twosided-expr.tsv", delim="\t")
-load("inst/extdata/nature-biotech.Rdata")
 
 grid <- NULL
 sz <- 0
 ret <- list()
 for(d in names(dataset)) {
   df.dat <- dataset[[d]]
-  cache.dir <- file.path("/Users/hwan/Sandbox/CC2Sim/cache/nature-biotech", d  )
+  cache.dir <- file.path("/Users/hwan/Sandbox/CC2Sim/cache/nature-biotech", d )
   dir.create(cache.dir, showWarnings = T, recursive = T, mode = "0777")
   ret[[d]] <- run(df.dat, methods, selector, cache.dir)
+}
+
+for(d in names(dataset)) {
+  df.dat <- dataset[[d]]
   x <- plot.all(ret[[d]], "ROC", paste0(d, " dataset benchmark (AUCROC)"))
   y <- plot.all(ret[[d]], "PR", paste0(d, " dataset benchmark (AUCPRC)"))
 
-  out.path <- file.path("/Users/hwan/Sandbox/CC2Sim/cache/nature-biotech",  paste0("benchmark_", d, ".pdf"))
   xy <- plot_grid(x, y)
 
   if(is.null(grid)) {
@@ -344,111 +363,3 @@ for(d in names(dataset)) {
   }
 }
 save_plot(filename = "/Users/hwan/Sandbox/CC2Sim/cache/nature-biotech/benchmark.pdf", grid, base_height = 20, base_aspect_ratio = 1, limitsize=F)
-
-both <- plot_grid(rtt.x, umuc.x, rtt.y, umuc.y)
-
-rank.heatmap <- function(gene.ret, filename) {
-  gene.ret <- ret$gene
-  gene.rank <- gene.ret[,-c(1,ncol(gene.ret))]
-  for(i in 1:(ncol(gene.ret)-2)) {
-    gene.rank[,i] <- rank(gene.ret[,i+1])
-  }
-  row.names(gene.rank) <- gene.ret$gene
-  library(pheatmap)
-  library(RColorBrewer)
-
-  df.anno <- data.frame(label=ifelse(gene.ret$label,"essential", "non essential"))
-  row.names(df.anno) <- gene.ret$gene
-  order(rowSums(gene.rank))
-  pheatmap(t(gene.rank[order(gene.rank$CC2),]), cluster_cols = F,
-           color = colorRampPalette((brewer.pal(n = 11, name ="RdYlBu")))(100),
-           annotation_col = df.anno)
-}
-rank.heatmap(ret$gene, "RT112-gene-heatmap.pdf")
-rank.heatmap(UMUC3.ret$gene, "UMUC3-gene-heatmap.pdf")
-
-df.sgrna.plot <- tibble()
-for(d in names(ret)) {
-  df.sgrna <- ret[[d]]$tidy.sgRNA
-  df.sgrna$score <- -df.sgrna$score
-  for(mat in unique(df.sgrna$methods)) {
-    tmp <- df.sgrna %>% filter(methods==mat)
-    for(fdr in seq(-10,-2,1)) {
-
-      precision <- sum(tmp$score < fdr & tmp$label == 1) / max(1,sum(tmp$score < fdr))
-      df.sgrna.plot <- bind_rows(df.sgrna.plot, tibble(dataset=d, method=mat, FDR=fdr, PR=precision))
-    }
-  }
-}
-
-ggplot(df.sgrna.plot, aes(x=FDR, y=PR)) + geom_point(aes(colour=method)) + facet_grid(.~dataset)
-
-
-df.gene.plot <- tibble()
-for(d in names(ret)) {
-  if(d == "CRISPRi.RT112") next()
-  df.gene <- ret[[d]]$tidy.gene
-  df.gene$score <- -df.gene$score
-  for(mat in unique(df.gene$methods)) {
-    tmp <- df.gene %>% filter(methods==mat)
-    if(mat!="CC2") {
-      tmp$score <- p.adjust(tmp$score, method="fdr")
-    }
-    for(fdr in seq(-10,-2,1)) {
-      fdr <- 10^fdr
-      TP <- sum(tmp$score < fdr & tmp$label == 1)
-      FP <- sum(tmp$score < fdr & tmp$label == 0)
-      precision <- TP / max(1,(TP+FP))
-      #precision <- sum(tmp$score < fdr & tmp$label == 1) / max(1,sum(tmp$score < fdr))
-      df.gene.plot <- bind_rows(df.gene.plot, tibble(dataset=d, method=mat, FDR=log10(fdr), PR=precision, TP=TP, FP=FP))
-    }
-  }
-}
-View(df.gene.plot)
- ggplot(df.gene.plot, aes(x=FDR, y=PR)) + geom_point(aes(colour=method), alpha=0.5) +
-  geom_line(aes(colour=method), alpha=0.5) + facet_grid(.~dataset) + ylim(0,1)
-
-
-
-
-methods = list(
-  MAGeCK = run.mageck,
-  DESeq2 = run.DESeq2,
-  edgeR = run.edgeR,
-  sgRSEA = run.sgRSEA,
-  PBNPA = run.PBNPA,
-  #ScreenBEAM = run.ScreenBEAM,
-  CC2 = run.mbttest
-)
-
-selector <- read_delim("inst/extdata/twosided-expr.tsv", delim="\t")
-
-sim.ret <- list()
-for(depth in c(10, 50, 100, 200, 500, 1000)) {
-  for(noise in c(0.1, 0.5, 1.0)) {
-    for(effect in c(0.1, 0.2)) {
-      for(facs in c(0.1, 0.25)) {
-        param <- sprintf("D=%d_N=%.1f_E=%.1f_F=%.2f", depth, noise, effect, facs)
-        cache.dir <- file.path("/Users/hwan/Sandbox/CC2Sim/cache/sim", param )
-        dir.create(cache.dir, showWarnings = T, recursive = T, mode = "0777")
-        dat <- load.sim(depth = depth, facs = facs, noise=noise, effect=effect)
-        sim.ret[[param]] <- run(dat, methods, selector, cache.dir)
-      }
-    }
-  }
-}
-
-
-for(p in names(sim.ret)) {
-  out.path <- file.path("/Users/hwan/Sandbox/CC2Sim/cache/sim", paste0(p, ".pdf") )
-  save_plot(filename = out.path, plot.all(sim.ret[[p]],p), base_height = 5, base_aspect_ratio = 1.6)
-}
-
-load.sim <- function(depth, facs, noise, effect) {
-  raw.url <- "https://raw.githubusercontent.com/hyunhwaj/Crispulator.jl/master/simulation/matrix/scenario_%d_%.2f_%.2f_%.2f.csv"
-  url <- sprintf(raw.url, depth, facs, noise, effect)
-  read.csv(url)
-}
-dat <- load.sim(depth = 10, facs = 0.25, noise=0.1, effect=0.1)
-
-mbetattest(dat, nci=4, na=4, nb=4, alpha=0.05, level='sgRNA')

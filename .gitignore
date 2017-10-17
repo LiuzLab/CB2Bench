@@ -27,3 +27,5 @@ vignettes/*.pdf
 inst/nbt.3536-S3.xlsx.*
 inst/*.*
 cache/
+*.pdf
+**/*.pdf
