@@ -30,16 +30,16 @@ for(f in Sys.glob(file.name)) {
     fdr[df$fc>0] <- 1
   } else if(m=="edgeR_sgRNA.csv") {
     fdr <- p.adjust(fdr, method="fdr")
-    fdr[df$logFC>0] <- 1 
+    fdr[df$logFC>0] <- 1
   }
-  
+
   m <- strsplit(m,"\\_")[[1]][1]
   new.df <- data.frame(dataset=dset, method=m, sgRNA=df[,1], fdr=fdr)
   colnames(new.df) <- c("dataset", "method", "sgRNA", "fdr")
   ess <- dataset[[dset]] %>% mutate(essential=ifelse(class=="decreasing",1,0)) %>%
     select(sgRNA, essential)
   new.df <- left_join(new.df, ess, by=c("sgRNA"="sgRNA"))
-  
+
   if(is.null(all.df)) all.df <- new.df
   else {
     all.df <- rbind(all.df, new.df)
@@ -57,7 +57,7 @@ for(dset in unique(all.df$dataset)) {
       TP <- sum((tmp$fdr <= fdr) & (tmp$essential == 1))
       FP <- sum((tmp$fdr <= fdr) & (tmp$essential == 0))
       FN <- sum((tmp$fdr > fdr) & (tmp$essential == 1))
-      
+
       precision <- TP / max(1,(TP+FP))
       recall <- TP / max(1,(TP+FN))
       fmeasure <- 2*(precision*recall)/(precision+recall)
@@ -75,6 +75,7 @@ pt <- df.sgRNA.plot %>% filter(measure==measure) %>% filter(FDR>-6) %>%
   geom_line(aes(colour=method), alpha=0.5) + facet_grid(measure~dataset) + ylim(0,1) + scale_x_reverse(breaks = seq(1,5,1))+ xlab("FDR") + ylab("measure")
 save_plot(pt, filename = "nat-biotech-sgRNA-FDR.pdf", base_height = 4, base_width = 8)
 
+library(pheatmap)
 heatmap <- list()
 for(dset in unique(all.df$dataset)) {
   ess <- dataset[[dset]] %>% mutate(essential=ifelse(class=="decreasing",1,0)) %>%
@@ -83,18 +84,18 @@ for(dset in unique(all.df$dataset)) {
     select(sgRNA, essential)
   x <- all.df %>% filter(dataset==dset) %>% select(-1,-5) %>% spread(method, fdr) %>%
     remove_rownames()
-  
+
   x[x<1e-10] <- 1e-10
   x[,-1] <- floor(-log10(x[,-1]))
   x <- x[order(-rowSums(x[,-1])),]
   x <- x %>% left_join(ess, by="sgRNA")
   x <- x[order(-x$essential),]
   #x[x$essential==0,] <- x[x$essential==0,][order(rowSums(x[x$essential==0,c(-1,-ncol(x))])),]
-  
+
   x <- x %>% remove_rownames()
   x <- x[,c(1,3,2,4:ncol(x))]
   heatmap[[dset]] <- pheatmap(t(column_to_rownames(x, "sgRNA")), scale = "none",
-                              cluster_cols = F, cluster_rows = F, main = dset, color = c("#ffffff55","#000000",inferno(10)[2:10]),
+                              cluster_cols = F, cluster_rows = F, main = dset,
                               show_colnames=F)$gtable
 }
 

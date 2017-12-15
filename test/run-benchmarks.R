@@ -1,3 +1,4 @@
+library(tidyverse)
 library(CC2Sim)
 library(tidyverse)
 library(cowplot)
@@ -5,17 +6,15 @@ library(edgeR)
 library(DESeq2)
 library(sgRSEA)
 library(PBNPA)
-library(CRISPRCloud2)
+library(CC2Stat)
 library(plotROC)
 library(PRROC)
-selector <- read_delim("inst/extdata/negative-expr.tsv", delim="\t")
-#selector <- read_delim("inst/extdata/twosided-expr.tsv", delim="\t")
-load("inst/extdata/nature-biotech.Rdata")
 
 run.mageck <- function(dat) {
   tmp.fname <- tempfile(pattern = "file", tmpdir = tempdir())
 
   dat.mageck <- dat[, c(3,2, 5:ncol(dat))]
+  print(head(dat.mageck))
   write.table(file = tmp.fname, dat.mageck, sep="\t", quote = F, row.names = F)
   mageck.cmd <- "mageck"
 
@@ -43,10 +42,10 @@ run.mageck <- function(dat) {
   list("sgRNA"=df.sgRNA, "gene"=df.gene)
 }
 
-run.mbttest <- function(dat) {
+run.CC2 <- function(dat) {
   nx <- (ncol(dat)-4)
-  df.sgRNA <- mbetattest(X=dat, nci=4, na=nx/2, nb=nx/2, alpha=0.05, level="sgRNA")
-  df.gene <- mbetattest(X=dat, nci=4, na=nx/2, nb=nx/2, alpha=0.05, level="gene")
+  df.sgRNA <- CC2Stat(X=dat, nci=4, na=nx/2, nb=nx/2, alpha=0.05, level="sgRNA")
+  df.gene <- CC2Stat(X=dat, nci=4, na=nx/2, nb=nx/2, alpha=0.05, level="gene")
   list("gene"=df.gene, "sgRNA"=df.sgRNA)
 }
 
@@ -143,8 +142,8 @@ run.ibb <- function(dat) {
   N <- colSums(dat)
   G <- c(rep("G1", nx), rep("G2", nx))
   ret <- ibb.test( dat,
-            rep.row(N, NROW(dat)),
-            G, n.threads = -1)
+                   rep.row(N, NROW(dat)),
+                   G, n.threads = -1)
   ret.sgRNA <- data.frame(sgRNA=tmp$sgRNA, gene=tmp$gene, pvalue=ret$p.value, fc = ret$fc)
   ret.gene <- ret.sgRNA %>% group_by(gene) %>% summarise(pvalue=pchisq(-2*sum(log(pvalue)), n()*2, lower.tail=F),
                                                          fc=mean(fc))
@@ -168,6 +167,11 @@ run.RSA <- function(dat) {
     dplyr::summarise(score = mean(LogP))
   ret <- list("gene"=ret.gene)
 }
+
+
+selector <- read_delim("inst/extdata/negative-expr.tsv", delim="\t")
+#selector <- read_delim("inst/extdata/twosided-expr.tsv", delim="\t")
+load("inst/extdata/nature-biotech.Rdata")
 
 load.sim <- function(depth, facs, noise, effect) {
   raw.url <- "https://raw.githubusercontent.com/hyunhwaj/Crispulator.jl/master/simulation/matrix/scenario_%d_%.2f_%.2f_%.2f.csv"
@@ -333,8 +337,7 @@ methods = list(
   sgRSEA = run.sgRSEA,
   PBNPA = run.PBNPA,
   ScreenBEAM = run.ScreenBEAM,
-  CC2 = run.mbttest,
-  CC1 = run.ibb
+  CC2 = run.CC2
 )
 
 
