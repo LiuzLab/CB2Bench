@@ -75,13 +75,20 @@ pt <- df.gene.plot %>% filter(measure==measure) %>% filter(FDR>-6) %>%
   geom_line(aes(colour=method), alpha=0.5) + facet_grid(measure~dataset) + ylim(0,1) + scale_x_reverse(breaks = seq(1,5,1))+ xlab("FDR") + ylab("measure")
 save_plot(pt, filename = "nat-biotech-gene-FDR.pdf", base_height = 4, base_width = 8)
 
+library(pheatmap)
+library(RColorBrewer)
+
 heatmap <- list()
+
+(col.pal <- RColorBrewer::brewer.pal(5, "Reds"))
+col.pal[1] <- "#FFFFFF"
+
 for(dset in unique(all.df$dataset)) {
   ess <- dataset[[dset]] %>% mutate(essential=ifelse(class=="decreasing",1,0)) %>%
     group_by(gene) %>%
     summarise(essential=mean(essential)) %>%
     select(gene, essential)
-  x <- all.df %>% filter(dataset==dset) %>% select(-1,-5) %>% spread(method, fdr) %>%
+  x <- all.df %>% filter(dataset==dset, method != "DESeq2") %>% select(-1,-5) %>% spread(method, fdr) %>%
     remove_rownames()
 
   x[x<1e-8] <- 1e-8
@@ -90,11 +97,32 @@ for(dset in unique(all.df$dataset)) {
   x <- x %>% left_join(ess, by="gene")
   x <- x[order(-x$essential),]
   x <- x %>% remove_rownames()
-  x <- x[,c(1,3,2,4:ncol(x))]
-  heatmap[[dset]] <- pheatmap(column_to_rownames(x, "gene"), scale = "none",
-                              cluster_cols = F, cluster_rows = F, main = dset, color = c("#ffffff55","#000000",inferno(8)[2:8]),
-                              fontsize_row=8, display_numbers = T, number_format = "%d",
-                              fontsize_number = 6, legend = F)$gtable
+  #x <- x[,c(1,3,2,4:ncol(x))]
+  x$essential[x$essential==1] <- 8
+  tmp <- x %>% mutate(Essential = ifelse(essential>0, "Essential", "Non-essential") ) %>% select(gene, Essential) %>% column_to_rownames("gene")
+
+  hm <- pheatmap(column_to_rownames(x, "gene") %>% #select(-essential) %>%
+                   select(CC2, MAGeCK, PBNPA, ScreenBEAM, sgRSEA), scale = "none",
+                 cluster_cols = F, cluster_rows = F, main = dset, color = col.pal, #border_color = NA,
+                 fontsize_row=8, display_numbers = F, number_format = "%d",
+                 fontsize_number = 6, legend = F, show_rownames=F,  annotation_row = tmp, annotation_legend = F,
+                 annotation_colors = list("Essential"=c("Essential" = "#000000", "Non-essential" = "#ffffff")),
+                 gaps_row = sum(x$essential>0))
+  heatmap[[dset]] <- hm$gtable
 }
 
-save_plot(plot_grid(plotlist = heatmap,  ncol = 4), filename = "nat-biotech-gene-heatmap.pdf", base_height=10, base_width=12)
+
+hm <- pheatmap(column_to_rownames(x, "gene") %>% select(-essential) %>%
+                 select(CC2, MAGeCK, PBNPA, ScreenBEAM, sgRSEA), scale = "none",
+               cluster_cols = F, cluster_rows = F, main = dset, color = col.pal, border_color = NA,
+               fontsize_row=8, display_numbers = F, number_format = "%d",
+               fontsize_number = 6, legend = T, show_rownames=F, annotation_row = tmp,
+               annotation_colors = list("essential"=c("Essential" = "#000000", "Non-essential" = "#ffffff")),
+               gaps_row = sum(x$essential>0))
+
+#heatmap$legend <- hm$gtable[[1]][[7]]
+(p <- plot_grid(plotlist = heatmap,  ncol = 4))
+#save_plot(p, filename = "nat-biotech-gene-heatmap.pdf", base_height=10, base_width=12)
+
+
+

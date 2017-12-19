@@ -55,9 +55,9 @@ run.mageck <- function(dat) {
 #' run.mbttest(dat)
 run.mbttest <- function(dat) {
   nx <- (ncol(dat)-4)
-  df.sgRNA <- mbetattest(X=dat, nci=4, na=nx/2, nb=nx/2, alpha=0.05, level="sgRNA") %>%
+  df.sgRNA <- CC2Stat(X=dat, nci=4, na=nx/2, nb=nx/2, alpha=0.05, level="sgRNA") %>%
     dplyr::select(sgRNA=sgRNA, score=tvalue)
-  df.gene <- mbetattest(X=dat, nci=4, na=nx/2, nb=nx/2, alpha=0.05, level="gene") %>%
+  df.gene <- CC2Stat(X=dat, nci=4, na=nx/2, nb=nx/2, alpha=0.05, level="gene") %>%
     dplyr::select(gene=genes, score=gtvalue)
   list("gene"=df.gene, "sgRNA"=df.sgRNA)
 }

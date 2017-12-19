@@ -15,7 +15,7 @@ This is the R markdown report of the analysis for the CRISPR dataset of [Evers e
 
 ## Download dataset & Data Preprocessing
 ```{r}
-library(CRISPRCloud2)
+library(CC2Stat)
 library(CC2Sim)
 library(readxl)
 library(tidyverse)
@@ -101,9 +101,9 @@ run <- function(dat) {
     DESeq2 = run.DESeq2,
     edgeR = run.edgeR,
     sgRSEA = run.sgRSEA,
-    PBNA = run.PBNPA
+    PBNA = run.PBNPA,
     #screenBEAM = run.ScreenBEAM,
-    #CC2 = run.mbttest
+    C2 = run.mbttest
   )
   sim.dat <- dat
   results.sgRNA <- NULL
