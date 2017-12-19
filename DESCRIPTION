@@ -1,10 +1,11 @@
 Package: CC2Sim
-Title: What the Package Does (one line, title case)
+Title: A package for simulation for CRISPRCloud2 paper
 Version: 0.0.0.9000
-Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+Authors@R: person("Hyun-Hwan", "Jeong", email = "hyunhwaj@bcm.edu", role = c("aut", "cre"))
+Description: generate simulation result
 Depends: R (>= 3.3.2)
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
+Import: CC2Stat, DESeq2, edgeR, PRROC, PBNPA, RSA, sgRSEA, tidyverse, cowplot, plotROC
 RoxygenNote: 6.0.1

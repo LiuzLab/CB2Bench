@@ -22,7 +22,7 @@ for(dset in unique(all.df$dataset)) {
 }
 
 
-(pt <- df.sgRNA.plot2 %>% mutate(FDR = factor(FDR, levels=ct)) %>%
+(pt <- df.sgRNA.plot2 %>% mutate(FDR = factor(FDR, levels=ct)) %>% filter(method!="DESeq2") %>%
   ggplot( aes(x=FDR, y=value)) + geom_point(aes(colour=method, shape=method), alpha=0.5) +
   geom_line(aes(colour=method, group=method), alpha=0.5) + facet_grid(measure~dataset) + ylim(0,1) +
   xlab("FDR") + ylab("measure") + scale_colour_d3() + theme(axis.text.x = element_text(angle=90)))
