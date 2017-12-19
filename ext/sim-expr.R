@@ -30,8 +30,8 @@ run.mageck <- function(dat) {
 
 run.mbttest <- function(dat) {
   nx <- (ncol(dat)-4)
-  df.sgRNA <- mbetattest(X=dat, nci=4, na=nx/2, nb=nx/2, alpha=0.05, level="sgRNA")
-  df.gene <- mbetattest(X=dat, nci=4, na=nx/2, nb=nx/2, alpha=0.05, level="gene")
+  df.sgRNA <- CC2Stat(X=dat, nci=4, na=nx/2, nb=nx/2, alpha=0.05, level="sgRNA")
+  df.gene <- CC2Stat(X=dat, nci=4, na=nx/2, nb=nx/2, alpha=0.05, level="gene")
   list("gene"=df.gene, "sgRNA"=df.sgRNA)
 }
 

@@ -26,12 +26,12 @@ plot.performance <- function(tidy, type="PR") {
     geom_bar(stat = "identity", aes(fill=method)) +
     theme(axis.title.x=element_blank(),
           axis.text.x=element_blank(),
-          axis.ticks.x=element_blank()) + ylim(0,1)
+          axis.ticks.x=element_blank()) + ylim(0,1) + theme(aspect.ratio = 1)
 
   ret$curve.plot <- ggplot(curve, aes(x=x, y=y)) +
     #geom_line(aes(colour=method)) +
     #geom_smooth(aes(colour=method),method="loess") + ylim(0,1)
-    geom_point(aes(colour=method), alpha=0.5, size=0.5) + ylim(0, 1)
+    geom_point(aes(colour=method), alpha=0.5, size=0.5) + ylim(0, 1) + theme(aspect.ratio = 1)
     #geom_path(aes(colour=method), alpha=0.5, size=1) + ylim(0,1)
 
   ret
