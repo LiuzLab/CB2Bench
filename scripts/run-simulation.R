@@ -20,13 +20,13 @@ for (i in 1:nrow(df.tmp)) {
   effect <- df.tmp[i,]$effect
   df.dat <-
     load.sim(
-      depth = 300,
+      depth = 500,
       facs = 0.25,
       noise = noise,
       effect = effect
     )
   cache.dir <-
-    file.path(sprintf("/Users/hwan/Sandbox/CC2Sim/cache/sim/FACS_0.25_DEPTH_100_NOISE_%.2f_EFFECT_%.2f/", noise, effect))
+    file.path(sprintf("/Users/hwan/Sandbox/CC2Sim/cache/sim/FACS_0.25_DEPTH_500_NOISE_%.2f_EFFECT_%.2f/", noise, effect))
 
   if(!dir.exists(cache.dir)) {
     dir.create(cache.dir, showWarnings = TRUE, recursive = TRUE, mode = "0777")
