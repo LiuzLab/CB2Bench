@@ -8,6 +8,7 @@ m_id$ScreenBEAM_gene.csv <- "FDR"
 m_id$sgRSEA_gene.csv <- "FDR.neg"
 m_id$CC1_gene.csv <- "pvalue"
 m_id$DESeq2_gene.csv <- "padj"
+m_id$CC2py_gene.csv <- "p_value"
 all.df <- NULL
 
 
@@ -21,6 +22,8 @@ for(f in Sys.glob(file.name)) {
   fdr <- df[,m_id[[m]]]
   if(m=="CC2_gene.csv") {
     fdr[df$gtvalue<0] <- 1
+  } else if(m=="CC2py_gene.csv") {
+    fdr[df$t_value<0] <- 1
   } else if(m=="ScreenBEAM_gene.csv") {
     fdr[df$beta>0] <- 1
   } else if(m=="CC1_gene.csv"||m=="DESeq2_gene.csv"){
@@ -43,7 +46,7 @@ for(f in Sys.glob(file.name)) {
   }
 }
 
-(pt1 <- heatmap.fdr(all.df, "gene", c("CC2", "ScreenBEAM", "PBNPA", "MAGeCK", "sgRSEA", "DESeq2")))
+(pt1 <- heatmap.fdr(all.df, "gene", c("CC2", "CC2py", "ScreenBEAM", "PBNPA", "MAGeCK", "sgRSEA", "DESeq2")))
 save_plot("figures/fig1-heatmap-gene.tiff",pt1, base_height = 8)
 (pt2 <- lineplot.fdr(all.df))
 save_plot("figures/fig2-fdr-curve-gene.tiff",pt2, base_height = 8, base_aspect_ratio = 1.6)

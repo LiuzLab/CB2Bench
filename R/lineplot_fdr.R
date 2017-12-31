@@ -1,5 +1,5 @@
 lineplot.fdr <- function(all.df) {
-  ct <- c(0.5, 0.2, 0.1, 0.05, 0.01, 0.005, 0.001)
+  ct <- c(0.2, 0.1, 0.05, 0.01, 0.005, 0.001)
   df.prof <- tibble()
   for(dset in unique(all.df$dataset)) {
     for(mat in unique(all.df$method)) {
@@ -20,7 +20,6 @@ lineplot.fdr <- function(all.df) {
       }
     }
   }
-
   (pt <- df.prof %>% mutate(FDR = factor(FDR, levels=ct)) %>%
       ggplot( aes(x=FDR, y=value)) + geom_point(aes(colour=method, shape=method), alpha=0.5) +
       geom_line(aes(colour=method, group=method), alpha=0.5) + facet_grid(measure~dataset) + ylim(0,1) +

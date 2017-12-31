@@ -1,3 +1,30 @@
+run.CC2py <- function(dat) {
+  tmp.fname <- tempfile(pattern = "file", tmpdir = tempdir())
+
+  dat.cc2py <- dat
+  write.table(file = tmp.fname, dat.cc2py, sep=",", quote = F, row.names = F)
+  cc2py.cmd <- "CC2Stat.py"
+
+  nx <- ncol(dat)-4
+  control.samples <- colnames(dat)[5:(5+nx/2-1)]
+  case.samples <- colnames(dat)[(5+nx/2):(5+nx-1)]
+
+  treatment.id <- paste0( case.samples, collapse="," )
+  control.id <- paste0( control.samples, collapse="," )
+
+  out.dir <- paste0(tempdir(),"/", "CC2Stat")
+  cmd  <- paste(cc2py.cmd, "-i", tmp.fname, "-t", treatment.id, "-c", control.id,
+                "-o", out.dir)
+
+  print(cmd)
+  system(cmd)
+  df.gene <- read.csv(paste0(out.dir, "/gene.csv"))
+
+  df.sgRNA <- read.csv(paste0(out.dir, "/sgrna.csv"))
+  list("sgRNA"=df.sgRNA, "gene"=df.gene)
+}
+
+
 run.mageck <- function(dat) {
   tmp.fname <- tempfile(pattern = "file", tmpdir = tempdir())
 
@@ -158,7 +185,7 @@ run.RSA <- function(dat) {
 }
 
 load.sim <- function(depth, facs, noise, effect) {
-  raw.url <- "https://raw.githubusercontent.com/hyunhwaj/Crispulator.jl/master/simulation/matrix/scenario_%d_%.2f_%.2f_%.2f.csv"
+  raw.url <- "https://raw.githubusercontent.com/hyunhwaj/Crispulator-sim/master/matrix/facs_%d_%.2f_%.2f_%.2f.csv"
   url <- sprintf(raw.url, depth, facs, noise, effect)
   read.csv(url)
 }

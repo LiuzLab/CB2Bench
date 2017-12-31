@@ -8,3 +8,4 @@ DESeq2		sgRNA	pvalue	-
 edgeR		sgRNA	PValue	-
 CC2	genes	sgRNA	pvalue	-	gpvalue	-
 CC1
+CC2py	gene	sgRNA	p_value	-	p_value	-

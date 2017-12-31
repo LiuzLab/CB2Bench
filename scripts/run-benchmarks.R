@@ -8,7 +8,8 @@ methods = list(
   sgRSEA = run.sgRSEA,
   PBNPA = run.PBNPA,
   ScreenBEAM = run.ScreenBEAM,
-  CC2 = run.CC2
+  CC2 = run.CC2,
+  CC2py = run.CC2py
 )
 
 ret <- list()
