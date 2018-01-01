@@ -5,9 +5,9 @@ run.CC2py <- function(dat) {
   write.table(file = tmp.fname, dat.cc2py, sep=",", quote = F, row.names = F)
   cc2py.cmd <- "CC2Stat.py"
 
-  nx <- ncol(dat)-4
-  control.samples <- colnames(dat)[5:(5+nx/2-1)]
-  case.samples <- colnames(dat)[(5+nx/2):(5+nx-1)]
+  nx <- ncol(dat)-3
+  control.samples <- colnames(dat)[4:(4+nx/2-1)]
+  case.samples <- colnames(dat)[(4+nx/2):(4+nx-1)]
 
   treatment.id <- paste0( case.samples, collapse="," )
   control.id <- paste0( control.samples, collapse="," )
@@ -28,14 +28,14 @@ run.CC2py <- function(dat) {
 run.mageck <- function(dat) {
   tmp.fname <- tempfile(pattern = "file", tmpdir = tempdir())
 
-  dat.mageck <- dat[, c(3,2, 5:ncol(dat))]
+  dat.mageck <- dat[, c(2,1, 4:ncol(dat))]
   print(head(dat.mageck))
   write.table(file = tmp.fname, dat.mageck, sep="\t", quote = F, row.names = F)
   mageck.cmd <- "mageck"
 
-  nx <- ncol(dat)-4
-  control.samples <- colnames(dat)[5:(5+nx/2-1)]
-  case.samples <- colnames(dat)[(5+nx/2):(5+nx-1)]
+  nx <- ncol(dat)-3
+  control.samples <- colnames(dat)[4:(4+nx/2-1)]
+  case.samples <- colnames(dat)[(4+nx/2):(4+nx-1)]
 
   treatment.id <- paste0( case.samples, collapse="," )
   control.id <- paste0( control.samples, collapse="," )
@@ -58,14 +58,14 @@ run.mageck <- function(dat) {
 }
 
 run.CC2 <- function(dat) {
-  nx <- (ncol(dat)-4)
-  df.sgRNA <- CC2Stat(X=dat, nci=4, na=nx/2, nb=nx/2, alpha=0.05, level="sgRNA")
-  df.gene <- CC2Stat(X=dat, nci=4, na=nx/2, nb=nx/2, alpha=0.05, level="gene")
+  nx <- (ncol(dat)-3)
+  df.sgRNA <- CC2Stat(X=dat, nci=3, na=nx/2, nb=nx/2, alpha=0.05, level="sgRNA")
+  df.gene <- CC2Stat(X=dat, nci=3, na=nx/2, nb=nx/2, alpha=0.05, level="gene")
   list("gene"=df.gene, "sgRNA"=df.sgRNA)
 }
 
 run.DESeq2<-function(dat){
-  df.deseq2<-dat[,-(1:4)]
+  df.deseq2<-dat[,-(1:3)]
 
   nx <- ncol(df.deseq2)
   col.data <- data.frame(row.names = colnames(df.deseq2),
@@ -87,7 +87,7 @@ run.DESeq2<-function(dat){
 }
 
 run.edgeR <- function(dat) {
-  df.edgeR <-dat[,-(1:4)]
+  df.edgeR <-dat[,-(1:3)]
   nx <- ncol(df.edgeR)
   group <- c(rep("T0", nx/2),rep("T1", nx/2))
   res1<- DGEList(counts=df.edgeR, group=group)
@@ -109,9 +109,9 @@ run.ScreenBEAM <- function(dat) {
 }
 
 run.sgRSEA <- function(dat) {
-  nx <- ncol(dat)-4
-  control.samples <- colnames(dat)[5:(5+nx/2-1)]
-  case.samples <- colnames(dat)[(5+nx/2):(5+nx-1)]
+  nx <- ncol(dat)-3
+  control.samples <- colnames(dat)[4:(4+nx/2-1)]
+  case.samples <- colnames(dat)[(4+nx/2):(4+nx-1)]
 
   dat <- UQnormalize(dat, trt=case.samples, ctrl=control.samples)
   results <- sgRSEA(dat=dat, multiplier=30)
@@ -131,14 +131,14 @@ run.sgRSEA <- function(dat) {
 run.PBNPA <- function(dat) {
   dat$gene <- as.character(dat$gene)
   dat$sgRNA <- as.character(dat$sgRNA)
-  nx <- (ncol(dat)-4)/2
+  nx <- (ncol(dat)-3)/2
 
   datlist <- list()
   for(i in 1:nx) {
     datlist[[i]] <- data.frame(sgRNA = dat$sgRNA,
                                Gene = dat$gene,
-                               initial.count = dat[,i+4],
-                               final.count = dat[,i+4+nx])
+                               initial.count = dat[,i+3],
+                               final.count = dat[,i+3+nx])
   }
   result <- PBNPA(datlist)$final.result %>%
     dplyr::mutate(p.value.twosides=pmin(1,pmin(pos.pvalue , neg.pvalue )*2))
@@ -151,9 +151,9 @@ rep.row<-function(x,n){
 }
 
 run.ibb <- function(dat) {
-  nx <- (ncol(dat)-4)/2
+  nx <- (ncol(dat)-3)/2
   tmp <- dat
-  dat <- dat[,-(1:4)]
+  dat <- dat[,-(1:3)]
   N <- colSums(dat)
   G <- c(rep("G1", nx), rep("G2", nx))
   ret <- ibb.test( dat,

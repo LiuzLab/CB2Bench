@@ -134,7 +134,8 @@ for (dset in unique(all.df$dataset)) {
 }
 
 
-(pt <- df.prof %>% mutate(FDR = factor(FDR, levels = ct)) %>% filter(measure=="F-measure", facs==0.1, depth==500) %>%
+(pt <- df.prof %>% mutate(FDR = factor(FDR, levels = ct)) %>%
+    filter(measure=="F-measure", facs==0.25, depth==100, noise < 1.0) %>%
   ggplot(aes(x = FDR, y = value)) +
   geom_point(aes(colour = method, shape =
                    method), alpha = 0.5) +

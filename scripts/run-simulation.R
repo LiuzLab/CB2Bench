@@ -10,8 +10,8 @@ methods = list(
 )
 
 df.tmp <- expand.grid(depth = c(100, 500),
-                      noise = c(0.1, 0.5, 1.0),
-                      effect = c(0.1, 0.2),
+                      noise = c(0.01, 0.1, 0.2),
+                      effect = c(0.01, 0.1, 0.2),
                       facs = c(0.1, 0.25))
 
 results <- tibble()
