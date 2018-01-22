@@ -63,4 +63,17 @@ heatmap.fdr <- function(all.df, prof.level, order.methods = NULL) {
   }
 
   (p <- plot_grid(plotlist = heatmap,  ncol = length(heatmap)))
+
+  df <- data.frame(
+    x = 1:5,
+    y = 1:5,
+    FDR = c("≥8", "≥6", "≥4", "≥2", "≥0"),
+    w = 1:5,
+    stringsAsFactors = F
+  )
+  test <- ggplot(df, aes(x, y)) +
+    geom_tile(aes(fill = FDR), colour="grey50") +
+    scale_fill_manual(name = "-log10(FDR)", values = c(rev(col.pal), "#ffffff"), limits=df$FDR)
+
+  (plot_grid(p, get_legend(test), rel_widths = c(5,1)))
 }

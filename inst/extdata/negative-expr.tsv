@@ -6,6 +6,6 @@ ScreenBEAM	gene				beta	-
 RSA	Gene_ID		score	-
 DESeq2	gene	sgRNA	stat	-	stat	-
 edgeR		sgRNA	logFC	-
-CC2	genes	sgRNA	tvalue	+	gtvalue	+
+CC2Tan	genes	sgRNA	tvalue	+	gtvalue	+
 CC1	gene	sgRNA	fc	-	fc	-
-CC2py	gene	sgRNA	t_value	+	t_value	+
+CC2	gene	sgRNA	t_value	+	t_value	+

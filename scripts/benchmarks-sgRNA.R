@@ -1,10 +1,9 @@
 m_id <- list()
 
-m_id$CC2_sgRNA.csv <- "pvalue"
+m_id$CC2_sgRNA.csv <- "p_value"
 m_id$MAGeCK_sgRNA.csv <- "p.low"
 m_id$DESeq2_sgRNA.csv <- "padj"
 m_id$edgeR_sgRNA.csv <- "PValue"
-m_id$CC2py_sgRNA.csv <- "p_value"
 all.df <- NULL
 
 
@@ -17,10 +16,6 @@ for(f in Sys.glob(file.name)) {
   df <- read.csv(f)
   fdr <- df[,m_id[[m]]]
   if(m=="CC2_sgRNA.csv") {
-    df <- df[,c(-1,-2)]
-    fdr[df$tvalue<0] <- 1
-  }
-  if(m=="CC2py_sgRNA.csv") {
     df <- df[,-1]
     fdr[df$t_value<0] <- 1
   } else if(m=="MAGeCK_sgRNA.csv") {
@@ -46,7 +41,7 @@ for(f in Sys.glob(file.name)) {
   }
 }
 
-(pt1 <- heatmap.fdr(all.df, "sgRNA", c("CC2", "CC2py", "MAGeCK", "edgeR", "DESeq2")))
+(pt1 <- heatmap.fdr(all.df, "sgRNA", c("CC2", "MAGeCK", "edgeR", "DESeq2")))
 save_plot("figures/fig3-heatmap-sgRNA.tiff",pt1, base_height = 8)
 (pt2 <- lineplot.fdr(all.df))
 save_plot("figures/fig4-fdr-curve-sgRNA.tiff",pt2, base_height = 8, base_aspect_ratio = 1.6)
