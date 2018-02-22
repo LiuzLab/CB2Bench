@@ -1,4 +1,3 @@
-selector <- read_delim("inst/extdata/negative-expr.tsv", delim="\t")
 load("inst/extdata/nature-biotech.Rdata")
 
 methods = list(
@@ -16,5 +15,5 @@ for(d in names(dataset)) {
   df.dat <- dataset[[d]][,-1]
   cache.dir <- file.path("/Users/hwan/Sandbox/CC2Sim/cache/nature-biotech", d )
   dir.create(cache.dir, showWarnings = T, recursive = T, mode = "0777")
-  ret[[d]] <- run(df.dat, methods, selector, cache.dir)
+  ret[[d]] <- run(df.dat, methods, cache.dir)
 }

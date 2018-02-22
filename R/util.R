@@ -109,11 +109,15 @@ run.ScreenBEAM <- function(dat) {
 }
 
 run.sgRSEA <- function(dat) {
-  nx <- ncol(dat)-3
-  control.samples <- colnames(dat)[4:(4+nx/2-1)]
-  case.samples <- colnames(dat)[(4+nx/2):(4+nx-1)]
-
+  dat <- dat[,-3]
+  dat[,c(1,2)] <- dat[,c(2,1)]
+  nx <- ncol(dat)-2
+  control.samples <- colnames(dat)[3:(3+nx/2-1)]
+  case.samples <- colnames(dat)[(3+nx/2):(3+nx-1)]
+  print(control.samples)
+  print(case.samples)
   dat <- UQnormalize(dat, trt=case.samples, ctrl=control.samples)
+  print(dat)
   results <- sgRSEA(dat=dat, multiplier=30)
 
   pos <- results$gene.pos
@@ -224,11 +228,7 @@ plot.AUPRC <- function(tidy) {
   ret
 }
 
-run <- function(dat, methods, selector, cache.dir = NULL) {
-  sim.dat <- dat
-  results.sgRNA <- NULL
-  results.gene <- NULL
-  selector <- as.data.frame(selector)
+run <- function(dat, methods, cache.dir = NULL) {
   for (i in names(methods)) {
     cat("Running", i, "...", "\n")
 
@@ -241,7 +241,6 @@ run <- function(dat, methods, selector, cache.dir = NULL) {
     }
 
     df.ret <- list()
-
     if((is.null(cache.sgRNA)&&is.null(cache.gene)) ||
        (!file.exists(cache.sgRNA) && !file.exists(cache.gene)) ) {
       df.ret <- methods[[i]](dat)
@@ -259,70 +258,7 @@ run <- function(dat, methods, selector, cache.dir = NULL) {
         df.ret$gene <- read_csv(cache.gene)
       }
     }
-
-    gene_id <- selector[selector$name==i,]$gene_id
-    sgrna_id <- selector[selector$name==i,]$sgrna_id
-    tar.sgrna.column <- selector[selector$name==i, "sgRNA.column"]
-    tar.sgrna.func <- selector[selector$name==i, "sgRNA.func"]
-    tar.gene.column <- selector[selector$name==i, "gene.column"]
-    tar.gene.func <- selector[selector$name==i, "gene.func"]
-
-    if(!is.na(sgrna_id)) {
-      tmp.sgRNA <- data.frame("sgRNA"=df.ret$sgRNA[,sgrna_id],
-                              "score"=sapply(df.ret$sgRNA[,tar.sgrna.column],
-                                             get(tar.sgrna.func)))
-      colnames(tmp.sgRNA) <- c("sgRNA", "score")
-      if (is.null(results.sgRNA)) {
-        results.sgRNA <- tmp.sgRNA
-      } else {
-        results.sgRNA <- dplyr::left_join(results.sgRNA, tmp.sgRNA, by = "sgRNA")
-      }
-      nc <- ncol(results.sgRNA)
-      colnames(results.sgRNA)[nc] <- i
-    }
-    if (!is.na(gene_id)) {
-      tmp.gene <- data.frame("gene"=df.ret$gene[,gene_id],
-                             "score"=sapply(df.ret$gene[,tar.gene.column],
-                                            get(tar.gene.func)))
-      colnames(tmp.gene) <- c("gene", "score")
-
-      if (is.null(results.gene)) {
-        results.gene <- tmp.gene
-      } else {
-        results.gene <- dplyr::left_join(results.gene, tmp.gene, by = "gene")
-      }
-      nc <- ncol(results.gene)
-      colnames(results.gene)[nc] <- i
-    }
   }
-
-  ret <- list()
-  ret$df <- (
-    df.sgRNA.summary <- results.sgRNA %>%
-      dplyr::left_join(select(sim.dat, sgRNA, class), by = "sgRNA") %>%
-      mutate(label = ifelse(
-        class %in% c("increasing", "decreasing"), 1, 0
-      )) %>%
-      select(-class)
-  )
-  ret$sgRNA <- df.sgRNA.summary
-
-  ret$tidy.sgRNA <- (tidy.sgRNA.summary <- df.sgRNA.summary %>%
-                       gather(methods, score,-sgRNA,-label))
-
-  tmp <- sim.dat %>% group_by(gene) %>%
-    filter(row_number()==1) %>% select(gene, class)
-  df.gene.summary <- results.gene %>%
-    left_join(select(tmp, gene, class), by="gene") %>%
-    mutate(label = ifelse(class %in% c("increasing", "decreasing"), 1, 0)) %>%
-    select(-class)
-
-  tidy.gene.summary <- df.gene.summary %>%
-    gather(methods, score, -gene, -label)
-  ret$tidy.gene <- tidy.gene.summary
-  ret$gene <- df.gene.summary
-
-  ret
 }
 
 

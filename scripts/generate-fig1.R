@@ -1,6 +1,6 @@
 pt.f1 <- list()
 all.df <- all.df %>% filter(method!="DESeq2")
-ct <- c(0.1, 0.05, 0.01, 0.005, 0.001)
+ct <- c(0.1, 0.05, 0.01, 0.005, 0.001, 0.0001, 0.00001)
 for(dset in unique(all.df$dataset)) {
   df.prof <- tibble()
   for(mat in unique(all.df$method)) {
