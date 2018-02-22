@@ -5,9 +5,8 @@ m_id$MAGeCK_gene.csv <- "neg.fdr"
 m_id$PBNPA_gene.csv <- "neg.fdr"
 m_id$ScreenBEAM_gene.csv <- "FDR"
 m_id$sgRSEA_gene.csv <- "FDR.neg"
-m_id$CC1_gene.csv <- "pvalue"
 m_id$DESeq2_gene.csv <- "padj"
-m_id$CC2_gene.csv <- "p_value"
+m_id$CC2_gene.csv <- "pvalue.pos"
 all.df <- NULL
 
 
@@ -20,10 +19,10 @@ for(f in Sys.glob(file.name)) {
   df <- read.csv(f)
   fdr <- df[,m_id[[m]]]
   if(m=="CC2_gene.csv") {
-    fdr[df$t_value<0] <- 1
+    fdr <- p.adjust(fdr,method="fdr")
   } else if(m=="ScreenBEAM_gene.csv") {
     fdr[df$beta>0] <- 1
-  } else if(m=="CC1_gene.csv"||m=="DESeq2_gene.csv"){
+  } else if(m=="CC_gene.csv"||m=="DESeq2_gene.csv"){
     fdr <- p.adjust(fdr, method="fdr")
     fdr[df$fc>0] <- 1
   }
@@ -43,7 +42,7 @@ for(f in Sys.glob(file.name)) {
   }
 }
 
-(pt1 <- heatmap.fdr(all.df, "gene", c("CC2", "ScreenBEAM", "PBNPA", "MAGeCK", "sgRSEA")))
+(pt1 <- heatmap.fdr(all.df, "gene", c("CC2", "ScreenBEAM", "PBNPA", "MAGeCK")))
 save_plot("figures/fig1-heatmap-gene.tiff",pt1, base_height = 8)
 (pt2 <- lineplot.fdr(all.df %>% filter(method != "DESeq2")))
 save_plot("figures/fig2-fdr-curve-gene.tiff",pt2, base_height = 8, base_aspect_ratio = 1.6)
@@ -51,4 +50,5 @@ save_plot("figures/fig2-fdr-curve-gene.tiff",pt2, base_height = 8, base_aspect_r
 (pt3 <- lineplot.fdr.f1(all.df %>% filter(method != "DESeq2")))
 save_plot("figures/fig2-fdr-curve-gene.tiff",pt2, base_height = 8, base_aspect_ratio = 1.6)
 
-plot_grid(pt1, pt3, ncol=1, labels = "auto")
+
+save_plot("figures/fig.tiff",plot_grid(pt1, pt3, ncol=1, labels = "auto"), base_height = 6)
