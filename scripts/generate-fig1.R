@@ -16,6 +16,11 @@ for(dset in unique(all.df$dataset)) {
       fmeasure <- 2*(precision*recall)/(precision+recall)
       if(is.na(fmeasure)) fmeasure <- 0
       df.prof <- bind_rows(df.prof, tibble(dataset=dset,method=mat, FDR=fdr, value=fmeasure, measure="F-measure", TP=TP, FP=FP, FN=FN))
+      if(dset=="shRNA.RT112" && mat=="CC2") {
+        print(c(mat, dset, fdr))
+        print(table(tmp$fdr <= fdr, tmp$essential))
+        print(c(precision, recall, fmeasure))
+      }
     }
   }
 

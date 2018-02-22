@@ -2,7 +2,6 @@ load("inst/extdata/nature-biotech.Rdata")
 
 methods = list(
   MAGeCK = run.mageck,
-  DESeq2 = run.DESeq2,
   edgeR = run.edgeR,
   sgRSEA = run.sgRSEA,
   PBNPA = run.PBNPA,
