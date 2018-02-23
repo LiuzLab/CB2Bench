@@ -1,28 +1,56 @@
+# run.CC2py <- function(dat) {
+#   tmp.fname <- tempfile(pattern = "file", tmpdir = tempdir())
+#
+#   dat.cc2py <- dat %>% select(-class)
+#   write.table(file = tmp.fname, dat.cc2py, sep=",", quote = F, row.names = F)
+#   cc2py.cmd <- "CC2Stat.py"
+#
+#   nx <- ncol(dat.cc2py)-2
+#   control.samples <- colnames(dat.cc2py)[3:(3+nx/2-1)]
+#   case.samples <- colnames(dat.cc2py)[(3+nx/2):(3+nx-1)]
+#
+#
+#   res <- bbt.test(dat.cc2py[,control.samples],dat.cc2py[,case.samples])
+#   print(head(df_res <- cbind(dat.cc2py[,1:2], res)))
+#
+#   gene_res <- df_res %>% select(gene, sgRNA, tstat, pvalue.neg, pvalue.pos) %>%
+#     group_by(gene) %>%
+#     summarise(pvalue.pos=pchisq(-2*sum(log(pvalue.pos)), 2*n(), lower.tail = F),
+#               pvalue.neg=pchisq(-2*sum(log(pvalue.neg)), 2*n(), lower.tail = F),
+#               tstat=mean(tstat))
+#   df.gene <- as.data.frame(gene_res)
+#   df.sgRNA <- as.data.frame(df_res)
+#   list("sgRNA"=df.sgRNA, "gene"=df.gene)
+# }
+
+
 run.CC2py <- function(dat) {
   tmp.fname <- tempfile(pattern = "file", tmpdir = tempdir())
 
   dat.cc2py <- dat %>% select(-class)
   write.table(file = tmp.fname, dat.cc2py, sep=",", quote = F, row.names = F)
-  cc2py.cmd <- "CC2Stat.py"
+  cc2py.cmd <- "/anaconda3/bin/python3 /usr/local/bin/CC2Stat.py"
 
-  nx <- ncol(dat.cc2py)-2
-  control.samples <- colnames(dat.cc2py)[3:(3+nx/2-1)]
-  case.samples <- colnames(dat.cc2py)[(3+nx/2):(3+nx-1)]
+  nx <- ncol(dat)-3
+  control.samples <- colnames(dat)[4:(4+nx/2-1)]
+  case.samples <- colnames(dat)[(4+nx/2):(4+nx-1)]
 
+  print(control.samples)
+  print(case.samples)
+  treatment.id <- paste0( case.samples, collapse="," )
+  control.id <- paste0( control.samples, collapse="," )
 
-  res <- bbt.test(dat.cc2py[,control.samples],dat.cc2py[,case.samples])
-  print(head(df_res <- cbind(dat.cc2py[,1:2], res)))
+  out.dir <- paste0(tempdir(),"/", "CC2Stat")
+  cmd  <- paste(cc2py.cmd, "-i", tmp.fname, "-t", treatment.id, "-c", control.id,
+                "-o", out.dir)
 
-  gene_res <- df_res %>% select(gene, sgRNA, tstat, pvalue.neg, pvalue.pos) %>%
-    group_by(gene) %>%
-    summarise(pvalue.pos=pchisq(-2*sum(log(pvalue.pos)), 2*n(), lower.tail = F),
-              pvalue.neg=pchisq(-2*sum(log(pvalue.neg)), 2*n(), lower.tail = F),
-              tstat=mean(tstat))
-  df.gene <- as.data.frame(gene_res)
-  df.sgRNA <- as.data.frame(df_res)
+  print(cmd)
+  system(cmd)
+  df.gene <- read.csv(paste0(out.dir, "/gene.csv"))
+
+  df.sgRNA <- read.csv(paste0(out.dir, "/sgrna.csv"))
   list("sgRNA"=df.sgRNA, "gene"=df.gene)
 }
-
 
 run.mageck <- function(dat) {
   tmp.fname <- tempfile(pattern = "file", tmpdir = tempdir())

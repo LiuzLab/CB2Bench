@@ -1,5 +1,3 @@
-load("inst/extdata/nature-biotech.Rdata")
-
 methods = list(
   MAGeCK = run.mageck,
   edgeR = run.edgeR,

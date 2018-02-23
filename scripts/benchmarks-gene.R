@@ -1,4 +1,3 @@
-
 m_id <- list()
 
 m_id$MAGeCK_gene.csv <- "neg.fdr"
@@ -6,11 +5,8 @@ m_id$PBNPA_gene.csv <- "neg.fdr"
 m_id$ScreenBEAM_gene.csv <- "FDR"
 m_id$sgRSEA_gene.csv <- "FDR.neg"
 m_id$DESeq2_gene.csv <- "padj"
-m_id$CC2_gene.csv <- "pvalue.pos"
+m_id$CC2_gene.csv <- "p_value_neg"
 all.df <- NULL
-
-
-load("inst/extdata/nature-biotech.Rdata")
 
 file.name <- "cache/nature-biotech/*/*_gene.csv"
 for(f in Sys.glob(file.name)) {

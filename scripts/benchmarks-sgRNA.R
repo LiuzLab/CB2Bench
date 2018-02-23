@@ -1,6 +1,6 @@
 m_id <- list()
 
-m_id$CC2_sgRNA.csv <- "p_value"
+m_id$CC2_sgRNA.csv <- "p_value_neg"
 m_id$MAGeCK_sgRNA.csv <- "p.low"
 m_id$DESeq2_sgRNA.csv <- "padj"
 m_id$edgeR_sgRNA.csv <- "PValue"
@@ -16,8 +16,8 @@ for(f in Sys.glob(file.name)) {
   df <- read.csv(f)
   fdr <- df[,m_id[[m]]]
   if(m=="CC2_sgRNA.csv") {
-    df <- df[,-1]
-    fdr[df$t_value<0] <- 1
+    fdr <- p.adjust(fdr, method="fdr")
+    df[,c(1,2)] <- df[,c(2,1)]
   } else if(m=="MAGeCK_sgRNA.csv") {
     fdr <- p.adjust(fdr, method="fdr")
   } else if(m=="CC1_sgRNA.csv"||m=="DESeq2_sgRNA.csv"){
