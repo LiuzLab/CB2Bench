@@ -1,6 +1,6 @@
 m_id <- list()
 
-m_id$CC2_sgRNA.csv <- "p_value_neg"
+m_id$CC2_sgRNA.csv <- "fdr_neg"
 m_id$MAGeCK_sgRNA.csv <- "p.low"
 m_id$DESeq2_sgRNA.csv <- "padj"
 m_id$edgeR_sgRNA.csv <- "PValue"
@@ -16,13 +16,11 @@ for(f in Sys.glob(file.name)) {
   df <- read.csv(f)
   fdr <- df[,m_id[[m]]]
   if(m=="CC2_sgRNA.csv") {
-    fdr <- p.adjust(fdr, method="fdr")
     df[,c(1,2)] <- df[,c(2,1)]
   } else if(m=="MAGeCK_sgRNA.csv") {
     fdr <- p.adjust(fdr, method="fdr")
-  } else if(m=="CC1_sgRNA.csv"||m=="DESeq2_sgRNA.csv"){
-    fdr <- p.adjust(fdr, method="fdr")
-    fdr[df$fc>0] <- 1
+  } else if(m=="DESeq2_sgRNA.csv"){
+    fdr[df$stat>0] <- 1
   } else if(m=="edgeR_sgRNA.csv") {
     fdr <- p.adjust(fdr, method="fdr")
     fdr[df$logFC>0] <- 1
@@ -41,6 +39,9 @@ for(f in Sys.glob(file.name)) {
   }
 }
 
+write_csv(all.df, "../CC2Sim-shiny-report/data/sgRNA.csv")
+all.df <- all.df %>%
+  filter(dataset!="shRNA.RT112", dataset!="shRNA.UMUC3")
 (pt1 <- heatmap.fdr(all.df, "sgRNA", c("CC2", "MAGeCK", "edgeR", "DESeq2")))
 save_plot("figures/fig3-heatmap-sgRNA.tiff",pt1, base_height = 8)
 (pt2 <- lineplot.fdr(all.df))

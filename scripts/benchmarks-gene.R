@@ -4,23 +4,18 @@ m_id$MAGeCK_gene.csv <- "neg.fdr"
 m_id$PBNPA_gene.csv <- "neg.fdr"
 m_id$ScreenBEAM_gene.csv <- "FDR"
 m_id$sgRSEA_gene.csv <- "FDR.neg"
-m_id$DESeq2_gene.csv <- "padj"
-m_id$CC2_gene.csv <- "p_value_neg"
+m_id$CC2_gene.csv <- "fdr_neg"
 all.df <- NULL
 
 file.name <- "cache/nature-biotech/*/*_gene.csv"
 for(f in Sys.glob(file.name)) {
   m <- basename(f)
+  if(m=="DESeq2_gene.csv") next()
   dset <- basename(dirname(f))
   df <- read.csv(f)
   fdr <- df[,m_id[[m]]]
-  if(m=="CC2_gene.csv") {
-    fdr <- p.adjust(fdr,method="fdr")
-  } else if(m=="ScreenBEAM_gene.csv") {
+  if(m=="ScreenBEAM_gene.csv") {
     fdr[df$beta>0] <- 1
-  } else if(m=="CC_gene.csv"||m=="DESeq2_gene.csv"){
-    fdr <- p.adjust(fdr, method="fdr")
-    fdr[df$fc>0] <- 1
   }
 
   m <- strsplit(m,"\\_")[[1]][1]
@@ -37,6 +32,10 @@ for(f in Sys.glob(file.name)) {
     all.df <- rbind(all.df, new.df)
   }
 }
+
+all.df %>% write_csv("../CC2Sim-shiny-report/data/gene.csv")
+all.df <- all.df %>%
+  filter(dataset!="shRNA.RT112", dataset!="shRNA.UMUC3")
 
 (pt1 <- heatmap.fdr(all.df, "gene", c("CC2", "ScreenBEAM", "PBNPA", "MAGeCK")))
 save_plot("figures/fig1-heatmap-gene.tiff",pt1, base_height = 8)

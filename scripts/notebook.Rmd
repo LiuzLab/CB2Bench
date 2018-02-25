@@ -1,0 +1,79 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+library(tidyverse)
+library(stringr)
+```
+
+```{r}
+df_stat <- read_csv("../cache/nature-biotech/CRISPR.RT112/CC2_gene.csv")
+df_count <- read_csv("../inst/extdata/CRISPR.RT112_essentiality.csv") %>% select(-X)
+head(df_count)
+```
+
+
+```{r}
+genes <- df_stat %>% filter(fdr_neg<0.05) %>% .$gene
+genes
+```
+
+```{r}
+target <- df_count %>% 
+  filter(gene %in% genes, class=="decreasing") %>% 
+  .$gene %>% unlist %>% .[1:10]
+```
+
+```{r}
+target <- "RPL5"
+for(g in target) {
+  print(df_count %>% filter(gene==g) %>%
+    select(-class) %>% 
+    gather(sample, count, -gene, -sgRNA) %>%
+    mutate(group=ifelse(str_sub(sample,1,1)=="B","T0", "T1")) %>%
+    mutate(sample=str_sub(sample,2,-1)) %>%
+  ggplot(aes(x=group, y=count)) + 
+    geom_jitter(aes(color=group), width=0.2) +
+    facet_wrap(~sgRNA) + ggtitle(g))
+}
+```
+
+```{r}
+df_stat %>% filter(gene=="RXFP2")
+```
+
+
+```{r}
+df_sg_stat <- read_csv("../cache/nature-biotech/shRNA.RT112/CC2_sgRNA.csv")
+df_sg_stat %>% filter(gene=="RXFP2")
+```
+
+```{r}
+df_sg_stat %>% filter(gene=="RXFP2") %>% select(p_value_neg) %>% unlist %>% 
+  log %>% sum %>% `*`(-2) %>% pchisq(10, lower.tail = F)
+```
+
+```{r}
+(rho <- df_count %>% filter(gene=="RXFP2") %>%
+  as.data.frame %>%
+  column_to_rownames("sgRNA") %>%
+  select(-gene, -class) %>% as.matrix %>% t %>%
+  cor)
+rho[upper.tri(rho)]
+```
+
+```{r}
+(cv <- 3.263 * rho + 0.710 * rho + 0.027 * rho^3) 
+```
+
+```{r}
+f <- 10^2 / (20+
+
+```
+

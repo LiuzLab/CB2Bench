@@ -9,5 +9,5 @@ for(d in names(dataset)) {
 for(d in names(dataset)) {
   file_path <- sprintf("inst/extdata/%s_essentiality.csv", d)
   print(file_path)
-  dataset[[d]] %>% select(gene, class) %>% write_csv(file_path)
+  dataset[[d]]%>% write_csv(file_path)
 }

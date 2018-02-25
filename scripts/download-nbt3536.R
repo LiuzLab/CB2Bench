@@ -26,7 +26,7 @@ dataset <- list("shRNA.RT112" = shRNA.RT112,
                 "shRNA.UMUC3" = shRNA.UMUC3,
                 "CRISPR.RT112"= crispr.RT112,
                 "CRISPR.UMUC3" = crispr.UMUC3,
-                "CRISPRi.RT1122" = crispri.RT112)
+                "CRISPRi.RT112" = crispri.RT112)
 
 for(d in names(dataset)) {
   colnames(dataset[[d]]) <- c("X", "gene", "sgRNA", "class", "B1", "B2", "B3", "A1", "A2", "A3")

@@ -21,9 +21,9 @@ lineplot.fdr <- function(all.df) {
     }
   }
   (pt <- df.prof %>% mutate(FDR = factor(FDR, levels=ct)) %>%
-      ggplot( aes(x=FDR, y=value)) + geom_point(aes(colour=method, shape=method), alpha=0.5) +
-      geom_line(aes(colour=method, group=method), alpha=0.5) + facet_grid(measure~dataset) + ylim(0,1) +
-      xlab("FDR") + ylab("measure") + scale_colour_d3() + theme(axis.text.x = element_text(angle=90))) +
+      ggplot( aes(x=FDR, y=value)) + geom_point(aes(colour=method), size=2) +
+      geom_line(aes(colour=method, group=method), size=0.8) + facet_grid(measure~dataset) + ylim(0,1) +
+      xlab("FDR") + ylab("measure") + scale_color_npg() + theme(axis.text.x = element_text(angle=90))) +
       theme(strip.text.x = element_text(face="bold"))
 }
 
@@ -49,8 +49,8 @@ lineplot.fdr.f1 <- function(all.df) {
     }
   }
   (pt <- df.prof %>% mutate(FDR = factor(FDR, levels=ct)) %>%
-      ggplot( aes(x=FDR, y=value)) + geom_point(aes(colour=method, shape=method), alpha=0.5) +
-      geom_line(aes(colour=method, group=method), alpha=0.5) + facet_grid(.~dataset) + ylim(0,1) +
-      xlab("FDR") + ylab("F1-score") + scale_colour_d3() + theme(axis.text.x = element_text(angle=90))) +
+      ggplot( aes(x=FDR, y=value)) + geom_point(aes(colour=method), size=2) +
+      geom_line(aes(colour=method, group=method), size=0.8) + facet_grid(.~dataset) + ylim(0,1) +
+      xlab("FDR") + ylab("F1-score") + scale_color_npg() + theme(axis.text.x = element_text(angle=90))) +
       theme(strip.text.x = element_text(face="bold"))
 }

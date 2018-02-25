@@ -1,6 +1,7 @@
 pt.f1 <- list()
-all.df <- all.df %>% filter(method!="DESeq2")
-ct <- c(0.1, 0.05, 0.01, 0.005, 0.001, 0.0001, 0.00001)
+all.df <- all.df %>% filter(method!="DESeq2") %>%
+  filter(dataset!="shRNA.RT112", dataset!="shRNA.UMUC3")
+ct <- c(0.1, 0.05, 0.01, 0.005, 0.001)
 for(dset in unique(all.df$dataset)) {
   df.prof <- tibble()
   for(mat in unique(all.df$method)) {
@@ -119,7 +120,14 @@ plot_grid(plotlist = pt.merged, nrow=1)
 
 legend_f1 <- get_legend(pt.f1$CRISPR.RT112 + theme(legend.position = "left"))
 
+# fig1 <- plot_grid(plot_grid(plotlist = pt.merged, nrow=1),
+#           plot_grid(legend_heatmap, legend_f1, ncol=1),
+#           rel_widths = c(9,1))
+
 fig1 <- plot_grid(plot_grid(plotlist = pt.merged, nrow=1),
-          plot_grid(legend_heatmap, legend_f1, ncol=1),
-          rel_widths = c(9,1))
-save_plot(filename = "figures/fig1-heatmap-f1.tiff", fig1, base_width = 13, base_height = 7)
+                  plot_grid(legend_heatmap, legend_f1, ncol=1),
+                  rel_widths = c(8.5,1.5))
+
+#save_plot(filename = "figures/fig1-heatmap-f1.tiff", fig1, base_width = 13, base_height = 7)
+save_plot(filename = "figures/fig1-heatmap-f1.tiff", fig1, base_width = 10, base_height = 7)
+
