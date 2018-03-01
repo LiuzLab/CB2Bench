@@ -1,7 +1,7 @@
 pt.f1 <- list()
 all.df <- all.df %>% filter(method!="DESeq2") %>%
   filter(dataset!="shRNA.RT112", dataset!="shRNA.UMUC3")
-ct <- c(0.1, 0.05, 0.01, 0.005, 0.001, 0.0001, 0.00001)
+ct <- c(0.1, 0.05, 0.01, 0.005, 0.001)
 for(dset in unique(all.df$dataset)) {
   df.prof <- tibble()
   for(mat in unique(all.df$method)) {
@@ -40,7 +40,7 @@ plot_grid(plot_grid(plotlist = pt.f1, nrow=1), legend, ncol=1, rel_heights = c(4
 
 
 prof.level <- "gene"
-order.methods <- c("CC2", "ScreenBEAM", "PBNPA", "PinAPL-py", "HitSelect", "MAGeCK")
+order.methods <- c("CC2", "ScreenBEAM", "PBNPA", "PinAPL-py", "sgRSEA", "HitSelect", "MAGeCK")
 all.df$fdr[is.na(all.df$fdr)] <- 1
 heatmap <- list()
 (col.pal <- RColorBrewer::brewer.pal(9, "Reds"))
@@ -125,5 +125,5 @@ fig1 <- plot_grid(plot_grid(plotlist = pt.merged, nrow=1),
                   plot_grid(legend_heatmap, legend_f1, ncol=1),
                   rel_widths = c(8.5,1.5))
 
-save_plot(filename = "figures/fig1-heatmap-f1.tiff", fig1, base_width = 10, base_height = 7)
+save_plot(filename = "figures/fig1-heatmap-f1.tiff", fig1, base_width = 10, base_height = 8)
 
