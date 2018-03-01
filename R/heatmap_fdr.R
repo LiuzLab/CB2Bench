@@ -2,7 +2,7 @@ heatmap.fdr <- function(all.df, prof.level, order.methods = NULL) {
 
   all.df$fdr[is.na(all.df$fdr)] <- 1
   heatmap <- list()
-  (col.pal <- RColorBrewer::brewer.pal(5, "Reds"))
+  (col.pal <- RColorBrewer::brewer.pal(9, "Reds"))
   col.pal[1] <- "#FFFFFF"
   for (dset in unique(all.df$dataset)) {
 
@@ -33,8 +33,8 @@ heatmap.fdr <- function(all.df, prof.level, order.methods = NULL) {
     x <- x[, c(1, 3, 2, 4:ncol(x))]
     x$essential[x$essential == 1] <- 8
     tmp <-
-      x %>% mutate(Essential = ifelse(essential > 0, "Essential", "Non-essential")) %>%
-      select(prof.level, Essential) %>%
+      x %>% mutate(Essentiality = ifelse(essential > 0, "Essential", "Non-essential")) %>%
+      select(prof.level, Essentiality) %>%
       column_to_rownames(prof.level)
 
     if(is.null(order.methods)) {
@@ -55,7 +55,7 @@ heatmap.fdr <- function(all.df, prof.level, order.methods = NULL) {
         annotation_row = tmp,
         annotation_legend = F,
         annotation_colors = list(
-          "Essential" = c("Essential" = "#000000", "Non-essential" = "#ffffff")
+          "Essentiality" = c("Essential" = "#000000", "Non-essential" = "#ffffff")
         ),
         gaps_row = sum(x$essential > 0)
       )
@@ -65,10 +65,11 @@ heatmap.fdr <- function(all.df, prof.level, order.methods = NULL) {
   (p <- plot_grid(plotlist = heatmap,  ncol = length(heatmap)))
 
   df <- data.frame(
-    x = 1:5,
-    y = 1:5,
-    FDR = c("≥8", "≥6", "≥4", "≥2", "≥0"),
-    w = 1:5,
+    x = 1:9,
+    y = 1:9,
+    #FDR = c("≥8", "≥6", "≥4", "≥2", "≥0"),
+    FDR = sprintf("≥%d", seq(8,0)),
+    w = 1:9,
     stringsAsFactors = F
   )
   test <- ggplot(df, aes(x, y)) +

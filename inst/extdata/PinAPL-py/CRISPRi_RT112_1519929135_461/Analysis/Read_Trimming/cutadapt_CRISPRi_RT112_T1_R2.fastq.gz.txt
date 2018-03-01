@@ -1,0 +1,44 @@
+This is cutadapt 1.15 with Python 2.7.6
+Command line parameters: -g CCCTTGGAGAAAAGCCTTGTTTG /workingdir/Data/CRISPRi_RT112_T1_R2.fastq.gz -o Trim_CRISPRi_RT112_T1_R2.fastq.gz -e 0.1 -m 20 -l 20
+Running on 1 core
+Trimming 1 adapter with at most 10.0% errors in single-end mode ...
+Finished in 380.01 s (68 us/read; 0.88 M reads/minute).
+
+=== Summary ===
+
+Total reads processed:               5,572,907
+Reads with adapters:                 5,552,775 (99.6%)
+Reads that were too short:                   9 (0.0%)
+Reads written (passing filters):     5,572,898 (100.0%)
+
+Total basepairs processed:   362,238,955 bp
+Total written (filtered):    111,457,960 bp (30.8%)
+
+=== Adapter 1 ===
+
+Sequence: CCCTTGGAGAAAAGCCTTGTTTG; Type: regular 5'; Length: 23; Trimmed: 5552775 times.
+
+No. of allowed errors:
+0-9 bp: 0; 10-19 bp: 1; 20-23 bp: 2
+
+Overview of removed sequences
+length	count	expect	max.err	error counts
+27	13816	0.0	2	0 0 13816
+28	255368	0.0	2	0 249944 5424
+29	5191267	0.0	2	5121204 65297 4766
+30	67503	0.0	2	449 63500 3554
+31	24789	0.0	2	1 9 24779
+32	5	0.0	2	1 0 4
+34	1	0.0	2	1
+37	3	0.0	2	3
+41	2	0.0	2	0 1 1
+42	11	0.0	2	2 9
+44	1	0.0	2	0 1
+47	1	0.0	2	1
+49	2	0.0	2	2
+50	1	0.0	2	1
+52	1	0.0	2	1
+53	1	0.0	2	1
+58	1	0.0	2	1
+60	2	0.0	2	1 1
+

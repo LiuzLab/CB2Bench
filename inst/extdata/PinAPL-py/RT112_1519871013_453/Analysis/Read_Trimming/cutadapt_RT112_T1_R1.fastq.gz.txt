@@ -1,0 +1,44 @@
+This is cutadapt 1.15 with Python 2.7.6
+Command line parameters: -g GGCTTTATATATCTTGTGGAAAGGACGAAACACCG /workingdir/Data/RT112_T1_R1.fastq.gz -o Trim_RT112_T1_R1.fastq.gz -e 0.1 -m 20 -l 20
+Running on 1 core
+Trimming 1 adapter with at most 10.0% errors in single-end mode ...
+Finished in 551.42 s (113 us/read; 0.53 M reads/minute).
+
+=== Summary ===
+
+Total reads processed:               4,896,568
+Reads with adapters:                 4,799,874 (98.0%)
+Reads that were too short:                   5 (0.0%)
+Reads written (passing filters):     4,896,563 (100.0%)
+
+Total basepairs processed:   318,276,920 bp
+Total written (filtered):     97,931,260 bp (30.8%)
+
+=== Adapter 1 ===
+
+Sequence: GGCTTTATATATCTTGTGGAAAGGACGAAACACCG; Type: regular 5'; Length: 35; Trimmed: 4799874 times.
+
+No. of allowed errors:
+0-9 bp: 0; 10-19 bp: 1; 20-29 bp: 2; 30-35 bp: 3
+
+Overview of removed sequences
+length	count	expect	max.err	error counts
+32	88	0.0	3	0 0 0 88
+34	103	0.0	3	0 0 0 103
+35	59	0.0	3	0 0 0 59
+36	69	0.0	3	0 0 0 69
+37	217	0.0	3	0 0 100 117
+38	9771	0.0	3	0 0 116 9655
+39	44295	0.0	3	0 0 42377 1918
+40	343685	0.0	3	0 331830 10303 1552
+41	4281245	0.0	3	4165866 104232 8738 2409
+42	82033	0.0	3	7355 69770 2858 2050
+43	20735	0.0	3	35 125 18862 1713
+44	17532	0.0	3	0 1 32 17499
+45	37	0.0	3	2 0 1 34
+46	1	0.0	3	0 0 0 1
+48	1	0.0	3	0 1
+49	1	0.0	3	0 1
+50	1	0.0	3	0 0 0 1
+51	1	0.0	3	0 1
+

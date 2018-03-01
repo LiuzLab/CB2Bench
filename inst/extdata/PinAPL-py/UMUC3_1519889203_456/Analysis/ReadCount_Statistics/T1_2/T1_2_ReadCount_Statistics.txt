@@ -1,0 +1,24 @@
+T1_2 Read Counts Distribution:
+***********************************
+
+Read Counts per sgRNA (normalized)
+------------------------------------
+Median:			983
+Standard Deviation:	735
+25% Quantile:		400
+75% Quantile:		1530
+Minimum:		0
+Maximum:		5101
+sgRNA Representation:	947 (98.5%)
+Gini coefficient:	0.395
+
+Read Counts per Gene (normalized)
+------------------------------------
+Median:			11219
+Standard Deviation:	4987
+25% Quantile:		6258
+75% Quantile:		14863
+Minimum:		2281
+Maximum:		22362
+Gene Representation:	93 (100.0%)
+Gini coefficient:	0.266

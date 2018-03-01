@@ -1,7 +1,7 @@
 pt.f1 <- list()
 all.df <- all.df %>% filter(method!="DESeq2") %>%
   filter(dataset!="shRNA.RT112", dataset!="shRNA.UMUC3")
-ct <- c(0.1, 0.05, 0.01, 0.005, 0.001)
+ct <- c(0.1, 0.05, 0.01, 0.005, 0.001, 0.0001, 0.00001)
 for(dset in unique(all.df$dataset)) {
   df.prof <- tibble()
   for(mat in unique(all.df$method)) {
@@ -40,10 +40,10 @@ plot_grid(plot_grid(plotlist = pt.f1, nrow=1), legend, ncol=1, rel_heights = c(4
 
 
 prof.level <- "gene"
-order.methods <- c("CC2", "ScreenBEAM", "PBNPA", "MAGeCK", "sgRSEA")
+order.methods <- c("CC2", "ScreenBEAM", "PBNPA", "PinAPL-py", "HitSelect", "MAGeCK")
 all.df$fdr[is.na(all.df$fdr)] <- 1
 heatmap <- list()
-(col.pal <- RColorBrewer::brewer.pal(5, "Reds"))
+(col.pal <- RColorBrewer::brewer.pal(9, "Reds"))
 col.pal[1] <- "#FFFFFF"
 for (dset in unique(all.df$dataset)) {
 
@@ -74,8 +74,8 @@ for (dset in unique(all.df$dataset)) {
   x <- x[, c(1, 3, 2, 4:ncol(x))]
   x$essential[x$essential == 1] <- 8
   tmp <-
-    x %>% mutate(Essential = ifelse(essential > 0, "Essential", "Non-essential")) %>%
-    select(prof.level, Essential) %>%
+    x %>% mutate(Essentiality = ifelse(essential > 0, "Essential", "Non-essential")) %>%
+    select(prof.level, Essentiality) %>%
     column_to_rownames(prof.level)
 
   if(is.null(order.methods)) {
@@ -96,7 +96,7 @@ for (dset in unique(all.df$dataset)) {
       annotation_row = tmp,
       annotation_legend = F,
       annotation_colors = list(
-        "Essential" = c("Essential" = "#000000", "Non-essential" = "#ffffff")
+        "Essentiality" = c("Essential" = "#000000", "Non-essential" = "#ffffff")
       ),
       gaps_row = sum(x$essential > 0)
     )
@@ -120,14 +120,10 @@ plot_grid(plotlist = pt.merged, nrow=1)
 
 legend_f1 <- get_legend(pt.f1$CRISPR.RT112 + theme(legend.position = "left"))
 
-# fig1 <- plot_grid(plot_grid(plotlist = pt.merged, nrow=1),
-#           plot_grid(legend_heatmap, legend_f1, ncol=1),
-#           rel_widths = c(9,1))
 
 fig1 <- plot_grid(plot_grid(plotlist = pt.merged, nrow=1),
                   plot_grid(legend_heatmap, legend_f1, ncol=1),
                   rel_widths = c(8.5,1.5))
 
-#save_plot(filename = "figures/fig1-heatmap-f1.tiff", fig1, base_width = 13, base_height = 7)
 save_plot(filename = "figures/fig1-heatmap-f1.tiff", fig1, base_width = 10, base_height = 7)
 

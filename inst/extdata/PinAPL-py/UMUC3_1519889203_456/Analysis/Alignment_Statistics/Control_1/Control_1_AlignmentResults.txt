@@ -1,0 +1,27 @@
+Control_1 Alignment Results
+**************************************
+
+Total Number of Reads: 	6149774
+
+Number of Reads with unique Alignments: 	2556819 (41.6%)
+Number of Reads above Ambiguity Tolerance: 	1933720 (31.4%)
+---------------------------------------------------------------
+Total Number of Reads matched: 			4490539 (73.0%)
+
+
+Number of Reads below Ambiguity Tolerance: 	73888 (1.2%)
+Number of Reads with failed Alignment: 		1585347 (25.8%)
+---------------------------------------------------------------
+Total Number of Reads discarded: 		1659235 (27.0%)
+
+
+
+---- Alignment completed in 1.12 [mins] ----
+
+
+Parameter settings
+L_bw (Seed Length): 11
+N_bw (Seed Mismatch): 1
+i_bw (Interval Function): S,1,0.75
+Theta (Ambiguity Threshold): 2
+AS_min (Matching Threshold): 40

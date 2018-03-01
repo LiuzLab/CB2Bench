@@ -1,0 +1,59 @@
+This is cutadapt 1.15 with Python 2.7.6
+Command line parameters: -g GCTTTATATATCTTGTGGAAAGGACGAAACACCG /workingdir/Data/UMUC3_T1_R3.fastq.gz -o Trim_UMUC3_T1_R3.fastq.gz -e 0.1 -m 20 -l 20
+Running on 1 core
+Trimming 1 adapter with at most 10.0% errors in single-end mode ...
+Finished in 464.17 s (80 us/read; 0.75 M reads/minute).
+
+=== Summary ===
+
+Total reads processed:               5,834,961
+Reads with adapters:                 5,798,677 (99.4%)
+Reads that were too short:                 206 (0.0%)
+Reads written (passing filters):     5,834,755 (100.0%)
+
+Total basepairs processed:   379,272,465 bp
+Total written (filtered):    116,695,100 bp (30.8%)
+
+=== Adapter 1 ===
+
+Sequence: GCTTTATATATCTTGTGGAAAGGACGAAACACCG; Type: regular 5'; Length: 34; Trimmed: 5798677 times.
+
+No. of allowed errors:
+0-9 bp: 0; 10-19 bp: 1; 20-29 bp: 2; 30-34 bp: 3
+
+Overview of removed sequences
+length	count	expect	max.err	error counts
+30	16	0.0	3	0 0 0 16
+31	8	0.0	3	0 0 0 8
+32	17	0.0	3	0 0 0 17
+36	49	0.0	3	0 0 0 49
+37	153	0.0	3	0 0 71 82
+38	7944	0.0	3	0 123 161 7660
+39	34943	0.0	3	310 505 32141 1987
+40	273512	0.0	3	4734 256783 9800 2195
+41	5328016	0.0	3	5154871 148355 17757 7033
+42	104247	0.0	3	2481 95740 3919 2107
+43	27771	0.0	3	19 53 25113 2586
+44	21751	0.0	3	27 3 15 21706
+45	44	0.0	3	17 4 4 19
+46	21	0.0	3	9 4 3 5
+47	13	0.0	3	7 0 4 2
+48	20	0.0	3	16 1 0 3
+49	21	0.0	3	9 4 3 5
+50	13	0.0	3	9 1 2 1
+51	12	0.0	3	8 3 1
+52	9	0.0	3	7 1 1
+53	8	0.0	3	5 0 2 1
+54	6	0.0	3	5 1
+55	12	0.0	3	7 2 0 3
+56	12	0.0	3	9 3
+57	12	0.0	3	10 0 1 1
+58	10	0.0	3	6 2 1 1
+59	8	0.0	3	5 2 0 1
+60	2	0.0	3	0 0 2
+61	6	0.0	3	4 1 1
+62	4	0.0	3	2 1 1
+63	4	0.0	3	4
+64	3	0.0	3	2 1
+65	10	0.0	3	2 3 2 3
+
