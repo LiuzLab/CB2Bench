@@ -25,6 +25,5 @@ vignettes/*.pdf
 .Rproj.user
 inst/nbt.3536-S3.xlsx.*
 inst/*.*
-cache/
 *.pdf
 **/*.pdf
