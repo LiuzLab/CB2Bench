@@ -15,8 +15,8 @@ library(RColorBrewer)
 
 
 set_here()
-source("scripts/download-nbt3536.R")
+#source("scripts/download-nbt3536.R")
 load("inst/extdata/nature-biotech.Rdata")
-source("scripts/run-benchmarks.R")
+#source("scripts/run-benchmarks.R")
 source("scripts/benchmarks-gene.R")
 source("scripts/benchmarks-sgRNA.R")

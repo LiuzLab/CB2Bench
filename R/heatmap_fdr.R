@@ -51,7 +51,7 @@ heatmap.fdr <- function(all.df, prof.level, order.methods = NULL) {
         main = dset,
         color = col.pal,
         legend = F,
-        show_rownames = F,
+        #show_rownames = F,
         annotation_row = tmp,
         annotation_legend = F,
         annotation_colors = list(
@@ -78,3 +78,5 @@ heatmap.fdr <- function(all.df, prof.level, order.methods = NULL) {
 
   (plot_grid(p, get_legend(test), rel_widths = c(5,1)))
 }
+
+

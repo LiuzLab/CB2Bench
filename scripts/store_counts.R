@@ -75,4 +75,6 @@ for(csv_path in Sys.glob("inst/extdata/*.csv")) {
   }
 }
 
-df_count %>% write_csv("../CC2Sim-shiny-report/data/read_count.csv")
+df_count %>% write_csv("inst/extdata/read_count.csv")
+
+all.df <- read_csv("inst/extdata/gene_fdr.csv")

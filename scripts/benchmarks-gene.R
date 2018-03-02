@@ -37,9 +37,9 @@ for(f in Sys.glob(file.name)) {
 
 all.df <- all.df %>%
   filter(dataset!="shRNA.RT112", dataset!="shRNA.UMUC3")
-all.df %>% write_csv("../CC2Sim-shiny-report/data/gene.csv")
+all.df %>% write_csv("inst/extdata/gene_fdr.csv")
 
-#(pt1 <- heatmap.fdr(all.df, "gene", c("CC2", "ScreenBEAM", "PBNPA", "PinAPL-py", "HitSelect", "MAGeCK")))
+(pt1 <- heatmap.fdr(all.df, "gene", c("CC2", "ScreenBEAM", "PBNPA", "PinAPL-py", "HitSelect", "MAGeCK")))
 #save_plot("figures/fig1-heatmap-gene.tiff",pt1, base_height = 8)
 (pt2 <- lineplot.fdr(all.df %>% filter(method != "DESeq2")))
 save_plot("figures/fig1-fdr-curve-gene.tiff",pt2, base_height = 8, base_aspect_ratio = 1.6)
