@@ -1,6 +1,6 @@
-Package: CC2Sim
-Title: A package for simulation for CRISPRCloud2 paper
-Version: 0.0.0.9000
+Package: CC2Bench
+Title: A package for the benchmarking of CRISPRCloud2 paper
+Version: 0.0.0.1000
 Authors@R: person("Hyun-Hwan", "Jeong", email = "hyunhwaj@bcm.edu", role = c("aut", "cre"))
 Description: generate simulation result
 Depends: R (>= 3.3.2)
