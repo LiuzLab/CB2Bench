@@ -9,10 +9,10 @@ library(PRROC)
 library(readr)
 library(ggsci)
 library(here)
-library(CC2Sim)
+library(CC2Bench)
 library(pheatmap)
 library(RColorBrewer)
-
+library(GGally)
 
 set_here()
 #source("scripts/download-nbt3536.R")

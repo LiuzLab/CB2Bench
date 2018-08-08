@@ -1,0 +1,11 @@
+INFO  @ Tue, 22 May 2018 04:08:10: Parameters: /anaconda3/bin/mageck plot -k test.csv -g sample1.gene_summary.txt 
+INFO  @ Tue, 22 May 2018 04:08:10: Welcome to MAGeCK v0.5.7. Command: plot 
+INFO  @ Tue, 22 May 2018 04:08:10: Loading count table from test.csv  
+INFO  @ Tue, 22 May 2018 04:08:10: Processing 1 lines.. 
+DEBUG @ Tue, 22 May 2018 04:08:10: Parsing error in line 1 (usually the header line). Skip this line. 
+INFO  @ Tue, 22 May 2018 04:08:10: Loaded 961 records. 
+INFO  @ Tue, 22 May 2018 04:08:10: Loading R template file: /anaconda3/lib/python3.6/site-packages/mageck/plot_template.RTemplate. 
+INFO  @ Tue, 22 May 2018 04:08:10: Loading R template file: /anaconda3/lib/python3.6/site-packages/mageck/plot_template_indvgene.RTemplate. 
+INFO  @ Tue, 22 May 2018 04:08:10: Loading Rnw template file: /anaconda3/lib/python3.6/site-packages/mageck/plot_template.Rnw. 
+DEBUG @ Tue, 22 May 2018 04:08:10: Setting up the visualization module... 
+ERROR @ Tue, 22 May 2018 04:08:10: Not enough field in gene summary file: sample1.gene_summary.txt 

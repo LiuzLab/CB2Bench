@@ -125,5 +125,7 @@ fig1 <- plot_grid(plot_grid(plotlist = pt.merged, nrow=1),
                   plot_grid(legend_heatmap, legend_f1, ncol=1),
                   rel_widths = c(8.5,1.5))
 
+
 save_plot(filename = "figures/fig1-heatmap-f1.tiff", fig1, base_width = 10, base_height = 8)
 
+#save_plot(filename = "figures/fig1-heatmap-f1.png", fig1, base_width = 10, base_height = 8)

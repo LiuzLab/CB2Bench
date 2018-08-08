@@ -27,3 +27,4 @@ inst/nbt.3536-S3.xlsx.*
 inst/*.*
 *.pdf
 **/*.pdf
+.DS_Store

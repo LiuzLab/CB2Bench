@@ -41,11 +41,12 @@ plot.dot.bar <- function(gene.name,
   plot_grid(plot.dots, plot.bar, ncol = 1)
 }
 
-gene.name <- "RPS27"
+gene.name <- "RPL5"
 plots <- list()
 for(dataset in c("CRISPR.RT112", "CRISPR.UMUC3", "CRISPRi.RT112")) {
   plots[[dataset]] <- plot.dot.bar(gene.name, dataset, 3)
 }
 
 plot_merged <- plot_grid(plotlist = plots, labels = "AUTO", nrow=1)
-save_plot("figures/RPL27.tiff", plot_merged, base_width = 14, base_height = 8)
+save_plot("figures/RPL5.png", plot_merged, base_width = 14, base_height = 12)
+#save_plot("figures/RPL5.tiff", plot_merged, base_width = 14, base_height = 8)
