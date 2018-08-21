@@ -65,7 +65,7 @@ plot_heatmap <- function(obj, df_sg, main_title) {
     `+`(1) %>% log2 %>%
     pheatmap(
       scale = "row",
-      cluster_cols = F,
+      #cluster_cols = F,
       #cluster_rows = F,
       show_rownames = F,
       border_color = NA,
@@ -74,38 +74,42 @@ plot_heatmap <- function(obj, df_sg, main_title) {
       clustering_method = "average",
       #clustering_distance_cols = "correlation",
       treeheight_row = 0,
-      treeheight_col = 0,
+      #treeheight_col = 0,
       main = main_title,
       silent = T) #%>% .$gtable
 }
 
-generate_figure <- function(obj, cutoff = 1e-2) {
+generate_figure <- function(obj, cutoff = 0.01, labels = c("A", "B")) {
+  #df_sg <- obj$merged_sg  %>%
+  #  filter(p_value_neg < cutoff, p.low > cutoff)
+  obj$merged_sg  %>%
+    filter(p_value_neg < cutoff, p.low < cutoff) %>%
+    plot_heatmap(obj, ., "CC2 & MAGeCK") -> hm.cc
   obj$merged_sg %>%
-    dplyr::filter(p_value_twosided < cutoff, p.twosided > cutoff) %>%
-    plot_heatmap(obj, ., "CC2") -> hm.cc
-  obj$merged_sg %>%
-    dplyr::filter(p_value_twosided > cutoff, p.twosided  < cutoff) %>%
+    filter(p_value_neg > cutoff, p.low < cutoff) %>%
     plot_heatmap(obj, ., "MAGeCK") -> hm.mg
 
   obj$merged_sg %>%
-    select(CC2 = p_value_twosided,
-           MAGeCK = p.twosided) %>%
-  mutate(CC2 = CC2 < cutoff,
+    select(CC2 = p_value_neg, MAGeCK = p.low) %>%
+    mutate(CC2 = CC2 < cutoff,
            MAGeCK = MAGeCK < cutoff) %>%
-    euler(shape = "ellipse") %>%
-    plot(quantities=T) -> vd
-
-  plot_grid(vd,
-            plot_grid(hm.cc$gtable, hm.mg$gtable, nrow=1),
-            rel_widths = c(1.5,1), scale=c(0.8, 1), nrow = 1)
+    euler %>%
+    plot(quantities=T,
+         fill = c("#f8e4e7", "#fbfbe5"),
+         edges = c("#b83f40", "#bfc160")) -> vd
+  plot_grid(plot_grid(vd, scale=0.8),
+            plot_grid(hm.cc$gtable, hm.mg$gtable, scale = 0.8, nrow = 1),
+            nrow=1,
+            rel_widths = c(1,1),
+            labels = labels)
 }
 
 CRISPRi.RT112 %>% generate_figure()
 
 plot_grid(
-  CRISPR.RT112 %>% generate_figure(0.01),
-  CRISPR.UMUC3 %>% generate_figure(0.01),
-  CRISPRi.RT112 %>% generate_figure(0.01),
-  ncol=1, labels = "AUTO")
+  CRISPR.RT112 %>% generate_figure(labels = c("A", "B")),
+  CRISPR.UMUC3 %>% generate_figure(labels = c("C", "D")),
+  CRISPRi.RT112 %>% generate_figure(labels = c("E", "F")),
+  ncol=1) %>%
   save_plot("figures/Figure-Heatmap-Evers.png",., base_width = 8, base_height = 12)
 

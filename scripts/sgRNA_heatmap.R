@@ -81,7 +81,7 @@ plot_heatmap <- function(obj, df_sg, main_title) {
       silent = T) #%>% .$gtable
 }
 
-generate_figure <- function(obj, cutoff = 1e-1) {
+generate_figure <- function(obj, cutoff = 0.05) {
   obj$merged_sg %>%
     dplyr::filter(fdr_twosided < cutoff, FDR > cutoff, `p-value (adj.)` > cutoff)  %>%
     plot_heatmap(obj, ., "CC2") -> hm.cc
@@ -125,3 +125,28 @@ plot_grid(
   ncol=1, labels = "AUTO") %>%
   save_plot("figures/Figure-Heatmap-Evers.png",., base_width = 8, base_height = 12)
 
+dev.off()
+par(mfrow=c(2,1))
+CRISPR.RT112$merged_sg %>%
+  filter(fdr_twosided < 0.01, FDR > 0.01) %>%
+  select(log2FC) %>% unlist %>% hist(main = "CC2")
+
+CRISPR.RT112$merged_sg %>%
+  filter(fdr_twosided > 0.01, FDR < 0.01) %>%
+  select(log2FC) %>% unlist %>% hist(main = "MAGeCK")
+
+CRISPR.UMUC3$merged_sg %>%
+  filter(fdr_twosided < 0.01, FDR > 0.01) %>%
+  select(log2FC) %>% unlist %>% hist(main = "CC2")
+
+CRISPR.UMUC3$merged_sg %>%
+  filter(fdr_twosided > 0.01, FDR < 0.01) %>%
+  select(log2FC) %>% unlist %>% hist(main = "MAGeCK")
+
+CRISPRi.RT112$merged_sg %>%
+  filter(fdr_twosided < 0.01, FDR > 0.01) %>%
+  select(log2FC) %>% unlist %>% hist(main = "CC2")
+
+CRISPRi.RT112$merged_sg %>%
+  filter(fdr_twosided > 0.01, FDR < 0.01) %>%
+  select(log2FC) %>% unlist %>% hist(main = "MAGeCK")
