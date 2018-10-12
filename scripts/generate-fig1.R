@@ -31,7 +31,8 @@ for(dset in unique(all.df$dataset)) {
       xlab("FDR") + ylab("F1-score") + ylim(0,1) +
     scale_color_npg() + theme(axis.text.x = element_text(angle=90)) +
     theme(strip.text.x = element_text(face="bold")) +
-    theme(legend.position = "none")
+    theme(legend.position = "none") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 }
 
@@ -85,20 +86,21 @@ for (dset in unique(all.df$dataset)) {
   hm <-
     pheatmap(
       column_to_rownames(x, prof.level) %>%
-        select(order.methods),
+        select(order.methods) %>% t,
       scale = "none",
       cluster_cols = F,
       cluster_rows = F,
-      main = dset,
+     # main = dset,
       color = col.pal,
       legend = F,
-      show_rownames = F,
-      annotation_row = tmp,
+      show_rownames = T,
+      show_colnames = F,
+      annotation_col = tmp,
       annotation_legend = F,
       annotation_colors = list(
         "Essentiality" = c("Essential" = "#000000", "Non-essential" = "#ffffff")
       ),
-      gaps_row = sum(x$essential > 0)
+      gaps_col = sum(x$essential > 0)
     )
   heatmap[[dset]] <- hm$gtable
 }
@@ -106,17 +108,19 @@ for (dset in unique(all.df$dataset)) {
 legend_heatmap <- generate_heatmap_legend()
 pt.merged <- list()
 for(d in unique(all.df$dataset)) {
-  x <- plot_grid(heatmap[[d]]) + theme(plot.margin = unit(c(12,24,6,40), "pt"))
+  x <- plot_grid(heatmap[[d]]) + theme(plot.margin = margin(l=20, b=20))
   if(d == "CRISPR.RT112") {
-    pt.merged[[d]] <- plot_grid(x, pt.f1[[d]], ncol=1, rel_heights = c(6,4),
+    pt.merged[[d]] <- plot_grid(x, pt.f1[[d]], nrow=1, rel_widths =  c(7,3),
                                 labels = "AUTO",
-                                label_size = 18)
+                                label_size = 18
+                                )
+
   } else {
-    pt.merged[[d]] <- plot_grid(x, pt.f1[[d]], ncol=1, rel_heights = c(6,4))
+    pt.merged[[d]] <- plot_grid(x, pt.f1[[d]], nrow=1, rel_widths =  c(7,3))
   }
 }
 
-plot_grid(plotlist = pt.merged, nrow=1)
+plot_grid(plotlist = pt.merged, ncol=1)
 
 legend_f1 <- get_legend(pt.f1$CRISPR.RT112 + theme(legend.position = "left"))
 

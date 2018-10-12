@@ -46,3 +46,4 @@ save_plot("figures/fig1-fdr-curve-gene.tiff",pt2, base_height = 8, base_aspect_r
 
 #(pt3 <- lineplot.fdr.f1(all.df %>% filter(method != "DESeq2")))
 #save_plot("figures/fig2-fdr-curve-gene.tiff",pt2, base_height = 8, base_aspect_ratio = 1.6)
+

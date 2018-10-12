@@ -11,6 +11,7 @@ draw <- function(screen) {
     mutate(method = "ScreenBEAM", rank = rank(zstat)) %>% select(method, gene, rank) %>%
     bind_rows(df_rank) -> df_rank
 
+
   sprintf("cache/nature-biotech/%s/PinAPL-Py_gene.csv", screen) %>% read_csv() %>%
     mutate(method = "PinAPL-Py", rank = rank(-`Fisher Statistic`)) %>% select(method, gene, rank) %>%
     bind_rows(df_rank) -> df_rank
