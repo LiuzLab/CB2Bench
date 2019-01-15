@@ -14,7 +14,7 @@ library(pheatmap)
 library(RColorBrewer)
 library(GGally)
 library(Cairo)
-
+library(CRISPhieRmix)
 
 #set_here()
 #source("scripts/download-nbt3536.R")

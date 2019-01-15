@@ -7,5 +7,5 @@ Depends: R (>= 3.3.2)
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
-Import: DESeq2, edgeR, PRROC, PBNPA, RSA, sgRSEA, tidyverse, cowplot, plotROC
+Import: DESeq2, edgeR, PRROC, PBNPA, RSA, sgRSEA, tidyverse, cowplot, plotROC, ggplot2
 RoxygenNote: 6.0.1

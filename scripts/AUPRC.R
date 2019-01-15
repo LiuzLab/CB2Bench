@@ -2,7 +2,7 @@ library(precrec)
 # The ggplot2 package is required
 library(ggplot2)
 
-dset <- "CRISPRi.RT112"
+dset <- "CRISPR.RT112"
 
 scores <- join_scores(
   all.df %>% filter(dataset==dset, method == "CC2") %>% mutate(fdr = 1-fdr) %>% pull(fdr),

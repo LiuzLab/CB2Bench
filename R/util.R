@@ -146,7 +146,7 @@ run.sgRSEA <- function(dat) {
   print(case.samples)
   dat <- UQnormalize(dat, trt=case.samples, ctrl=control.samples)
   print(dat)
-  results <- sgRSEA(dat=dat, multiplier=30)
+  results <- sgRSEA(dat=dat, multiplier=50)
 
   pos <- results$gene.pos
   neg <- results$gene.neg
