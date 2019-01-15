@@ -77,6 +77,7 @@ heatmap.fdr <- function(all.df, prof.level, order.methods = NULL) {
     scale_fill_manual(name = "-log10(FDR)", values = c(rev(col.pal), "#ffffff"), limits=df$FDR)
 
   (plot_grid(p, get_legend(test), rel_widths = c(5,1)))
+  #plot_grid(p)
 }
 
 
