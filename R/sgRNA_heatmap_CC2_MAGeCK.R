@@ -7,13 +7,13 @@ library(eulerr)
 CRISPR.RT112 <- list()
 CRISPR.UMUC3 <- list()
 CRISPRi.RT112 <- list()
-read_csv("inst/extdata/CRISPR.RT112.csv") %>% rename(gene=Gene) -> CRISPR.RT112$readcount
+read_csv("inst/extdata/CRISPR.RT112.csv") %>% dplyr::rename(gene=Gene) -> CRISPR.RT112$readcount
 read_csv("inst/extdata/CRISPR.UMUC3.csv") -> CRISPR.UMUC3$readcount
 read_csv("inst/extdata/CRISPRi.RT112.csv") -> CRISPRi.RT112$readcount
 
 rename_cols <- function(obj) {
   obj$readcount %>%
-    rename("T0 1" = A1,
+    dplyr::rename("T0 1" = A1,
            "T0 2" = A2,
            "T0 3" = A3,
            "T1 1" = B1,
@@ -97,10 +97,10 @@ generate_figure <- function(obj, cutoff = 0.01, labels = c("A", "B")) {
     plot(quantities=T,
          fill = c("#f8e4e7", "#fbfbe5"),
          edges = c("#b83f40", "#bfc160")) -> vd
-  plot_grid(plot_grid(vd, scale=0.8),
-            plot_grid(hm.cc$gtable, hm.mg$gtable, scale = 0.8, nrow = 1),
+  plot_grid(plot_grid(hm.cc$gtable, hm.mg$gtable, scale = 0.8, nrow = 1),
+            plot_grid(vd, scale=0.8),
             nrow=1,
-            rel_widths = c(1,1),
+            rel_widths = c(2,1),
             labels = labels)
 }
 
@@ -111,5 +111,5 @@ plot_grid(
   CRISPR.UMUC3 %>% generate_figure(labels = c("C", "D")),
   CRISPRi.RT112 %>% generate_figure(labels = c("E", "F")),
   ncol=1) %>%
-  save_plot("figures/Figure-Heatmap-Evers.png",., base_width = 8, base_height = 12)
+  save_plot("figures/Figure-Heatmap-Evers.pdf",., base_width = 8, base_height = 12)
 

@@ -69,4 +69,4 @@ plot_grid(
   "CRISPR.UMUC3" %>% draw,
   "CRISPRi.RT112" %>% draw,
   nrow = 1
-)
+) %>% save_plot(filename = "figures/rank-box.pdf", ., base_width = 16, base_height = 9)

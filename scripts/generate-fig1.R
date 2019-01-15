@@ -138,4 +138,4 @@ save_plot(filename = "figures/fig1-heatmap-f1.pdf", fig1, base_width = 10, base_
 #save_plot(filename = "figures/fig1-heatmap-f1.tiff", fig1, base_width = 10, base_height = 8)
 
 
-#save_plot(filename = "figures/fig1-heatmap-f1.png", fig1, base_width = 10, base_height = 8)
+save_plot(filename = "figures/fig1-heatmap-f1.png", fig1, base_width = 10, base_height = 8)
