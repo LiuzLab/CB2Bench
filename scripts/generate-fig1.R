@@ -86,6 +86,7 @@ for (dset in unique(all.df$dataset)) {
   hm <-
     pheatmap(
       column_to_rownames(x, prof.level) %>%
+        filter(essential > 0) %>%
         select(order.methods) %>% t,
       scale = "none",
       cluster_cols = F,
@@ -95,17 +96,18 @@ for (dset in unique(all.df$dataset)) {
       legend = F,
       show_rownames = T,
       show_colnames = F,
-      annotation_col = tmp,
+      # annotation_col = tmp,
       annotation_legend = F,
-      annotation_colors = list(
-        "Essentiality" = c("Essential" = "#000000", "Non-essential" = "#ffffff")
-      ),
-      gaps_col = sum(x$essential > 0)
+      # annotation_colors = list(
+      #   "Essentiality" = c("Essential" = "#000000", "Non-essential" = "#ffffff")
+      # ),
+     cellheight = 12,
+      #gaps_col = sum(x$essential > 0)
     )
   heatmap[[dset]] <- hm$gtable
 }
 
-legend_heatmap <- generate_heatmap_legend()
+legend_heatmap <- generate_heatmap_legend_no_essential()
 pt.merged <- list()
 for(d in unique(all.df$dataset)) {
   x <- plot_grid(heatmap[[d]]) + theme(plot.margin = margin(l=20, b=20))
@@ -120,16 +122,20 @@ for(d in unique(all.df$dataset)) {
   }
 }
 
-plot_grid(plotlist = pt.merged, ncol=1)
+legend_f1 <- plot_grid(get_legend(pt.f1$CRISPR.RT112 + theme(legend.position = "bottom")))
 
-legend_f1 <- get_legend(pt.f1$CRISPR.RT112 + theme(legend.position = "left"))
+top <- plot_grid(plotlist = pt.merged, nrow=3)
+bottom <- plot_grid(NULL, plot_grid(legend_heatmap), NULL, legend_f1, nrow=1, rel_widths = c(1,7,2,3))
+
+fig1 <- plot_grid(top,
+                  bottom,
+                  nrow = 2,
+                  rel_heights = c(9,1))
 
 
-fig1 <- plot_grid(plot_grid(plotlist = pt.merged, nrow=1),
-                  plot_grid(legend_heatmap, legend_f1, ncol=1),
-                  rel_widths = c(8.5,1.5))
+save_plot(filename = "figures/fig1-heatmap-f1.pdf", fig1, base_width = 10, base_height = 8)
 
+#save_plot(filename = "figures/fig1-heatmap-f1.tiff", fig1, base_width = 10, base_height = 8)
 
-save_plot(filename = "figures/fig1-heatmap-f1.tiff", fig1, base_width = 10, base_height = 8)
 
 #save_plot(filename = "figures/fig1-heatmap-f1.png", fig1, base_width = 10, base_height = 8)
