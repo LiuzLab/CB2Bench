@@ -8,16 +8,16 @@ heatmap.fdr <- function(all.df, prof.level, order.methods = NULL) {
 
     if(prof.level == "gene") {
       ess <-
-        dataset[[dset]] %>% mutate(essential = ifelse(class == "decreasing", 1, 0)) %>%
+        dataset[[dset]] %>%
         group_by(gene) %>%
-        summarise(essential = mean(essential)) %>%
+        summarise(essential = mean(class)) %>%
         select(gene, essential)
     }
     else {
       ess <-
-        dataset[[dset]] %>% mutate(essential = ifelse(class == "decreasing", 1, 0)) %>%
+        dataset[[dset]] %>%
         group_by(sgRNA) %>%
-        summarise(essential = mean(essential)) %>%
+        summarise(essential = mean(class)) %>%
         select(sgRNA, essential)
     }
     x <-

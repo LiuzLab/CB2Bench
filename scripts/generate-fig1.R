@@ -1,6 +1,4 @@
 pt.f1 <- list()
-all.df <- all.df %>% filter(method!="DESeq2") %>%
-  filter(dataset!="shRNA.RT112", dataset!="shRNA.UMUC3")
 ct <- c(0.1, 0.05, 0.01, 0.005, 0.001)
 for(dset in unique(all.df$dataset)) {
   df.prof <- tibble()
@@ -41,7 +39,7 @@ plot_grid(plot_grid(plotlist = pt.f1, nrow=1), legend, ncol=1, rel_heights = c(4
 
 
 prof.level <- "gene"
-order.methods <- c("CC2", "ScreenBEAM", "PBNPA", "PinAPL-py", "sgRSEA", "HitSelect", "MAGeCK")
+order.methods <- c("CC2", "ScreenBEAM", "CRISPhieRmix", "PBNPA", "PinAPL-py", "HitSelect", "MAGeCK")
 all.df$fdr[is.na(all.df$fdr)] <- 1
 heatmap <- list()
 (col.pal <- RColorBrewer::brewer.pal(9, "Reds"))
@@ -50,16 +48,16 @@ for (dset in unique(all.df$dataset)) {
 
   if(prof.level == "gene") {
     ess <-
-      dataset[[dset]] %>% mutate(essential = ifelse(class == "decreasing", 1, 0)) %>%
+      dataset[[dset]] %>%
       group_by(gene) %>%
-      summarise(essential = mean(essential)) %>%
+      summarise(essential = mean(class)) %>%
       select(gene, essential)
   }
   else {
     ess <-
-      dataset[[dset]] %>% mutate(essential = ifelse(class == "decreasing", 1, 0)) %>%
+      dataset[[dset]] %>%
       group_by(sgRNA) %>%
-      summarise(essential = mean(essential)) %>%
+      summarise(essential = mean(class)) %>%
       select(sgRNA, essential)
   }
   x <-

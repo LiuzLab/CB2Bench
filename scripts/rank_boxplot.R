@@ -30,8 +30,8 @@ draw <- function(screen) {
     bind_rows(df_rank) -> df_rank
 
 
-  sprintf("cache/nature-biotech/%s/sgRSEA_gene.csv", screen) %>% read_csv() %>%
-    mutate(method = "sgRSEA", rank = rank.neg) %>% select(method, gene, rank) %>%
+  sprintf("cache/nature-biotech/%s/CRISPhieRmix_gene.csv", screen) %>% read_csv() %>%
+    mutate(method = "CRISPhieRmix", rank = rank(FDR)) %>% select(method, gene, rank) %>%
     bind_rows(df_rank) -> df_rank
 
   df_rank %>% spread(method, rank) -> df_matrix
@@ -44,8 +44,7 @@ draw <- function(screen) {
   dataset[[screen]] %>%
     select(gene, class) %>%
     group_by(gene) %>%
-    mutate(essential = ifelse(class == "decreasing", 1, 0)) %>%
-    summarise(essential = mean(essential)) %>%
+    summarise(essential = mean(class)) %>%
     ungroup() %>%
     mutate(essential = c("non-essential", "essential")[essential+1]) -> df_info
 
@@ -69,4 +68,4 @@ plot_grid(
   "CRISPR.UMUC3" %>% draw,
   "CRISPRi.RT112" %>% draw,
   nrow = 1
-) %>% save_plot(filename = "figures/rank-box.pdf", ., base_width = 16, base_height = 9)
+) %>% save_plot(filename = "figures/rank-box.png", ., base_width = 16, base_height = 9)
